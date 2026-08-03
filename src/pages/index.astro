@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import {
+	AUTHOR,
+	GITHUB_URL,
+	RECENT_POSTS_COUNT,
+	RESUME_URL,
+	SITE_DESCRIPTION,
+	SITE_TITLE,
+} from '../consts';
+import { getPublishedPosts } from '../lib/posts';
+
+const posts = await getPublishedPosts();
+const recent = posts.slice(0, RECENT_POSTS_COUNT);
+---
+
+<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+	<section class="intro">
+		<h1>{AUTHOR}</h1>
+		<p>
+			프론트엔드 개발자입니다. 결과보다 <strong>판단이 뒤집힌 과정</strong>을 남기려고 합니다 — 뭘 저울질했고,
+			뭘 버렸고, 왜 그쪽으로 갔는지.
+		</p>
+		<p class="links">
+			<a href={GITHUB_URL} target="_blank" rel="noopener">GitHub</a>
+			<a href="/about">소개</a>
+			{RESUME_URL && <a href={RESUME_URL} target="_blank" rel="noopener">이력서</a>}
+			<a href="/rss.xml">RSS</a>
+		</p>
+	</section>
+
+	<section>
+		<h2>최근 글</h2>
+		{recent.length === 0 && <p>아직 발행한 글이 없다.</p>}
+		{recent.map((post) => <PostCard post={post} />)}
+		{posts.length > recent.length && <p class="more"><a href="/posts">전체 글 보기 →</a></p>}
+	</section>
+</BaseLayout>
+
+<style>
+	.intro {
+		padding-bottom: 1.5em;
+		margin-bottom: 1.5em;
+		border-bottom: 1px solid rgb(var(--gray-light));
+	}
+	.intro h1 {
+		margin-bottom: 0.3em;
+	}
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1em;
+		margin-top: 1.2em;
+	}
+	h2 {
+		margin-bottom: 0.3em;
+		font-size: 1.4em;
+	}
+	.more {
+		margin-top: 1.5em;
+	}
+</style>

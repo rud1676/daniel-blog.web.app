@@ -1,0 +1,166 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+import type { Post } from '../lib/posts';
+
+type Props = CollectionEntry<'posts'>['data'] & {
+	newer?: Post;
+	older?: Post;
+};
+
+const { title, description, pubDate, updatedDate, heroImage, tags, canonical, newer, older } =
+	Astro.props;
+---
+
+<html lang="ko">
+	<head>
+		<BaseHead
+			title={title}
+			description={description}
+			image={heroImage}
+			type="article"
+			canonical={canonical}
+			pubDate={pubDate}
+			updatedDate={updatedDate}
+		/>
+		<style>
+			main {
+				width: calc(100% - 2em);
+				max-width: 100%;
+				margin: 0;
+			}
+			.hero-image {
+				width: 100%;
+			}
+			.hero-image img {
+				display: block;
+				margin: 0 auto;
+				border-radius: 12px;
+				box-shadow: var(--box-shadow);
+			}
+			.prose {
+				width: 720px;
+				max-width: calc(100% - 2em);
+				margin: auto;
+				padding: 1em;
+				color: rgb(var(--gray-dark));
+			}
+			.title {
+				margin-bottom: 1em;
+				padding: 1em 0;
+				text-align: center;
+				line-height: 1;
+			}
+			.title h1 {
+				margin: 0 0 0.5em 0;
+			}
+			.date {
+				margin-bottom: 0.5em;
+				color: rgb(var(--gray));
+			}
+			.last-updated-on {
+				font-style: italic;
+			}
+			.tags {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 0.5em;
+				margin-top: 1em;
+			}
+			.tags a {
+				padding: 0.15em 0.6em;
+				border-radius: 999px;
+				background: rgb(var(--gray-light));
+				color: rgb(var(--gray-dark));
+				font-size: 0.85em;
+				text-decoration: none;
+			}
+			.tags a:hover {
+				color: rgb(var(--accent));
+			}
+			.adjacent {
+				display: flex;
+				justify-content: space-between;
+				gap: 1em;
+				margin-top: 3em;
+				padding-top: 1.5em;
+				border-top: 1px solid rgb(var(--gray-light));
+				font-size: 0.95em;
+			}
+			.adjacent a {
+				max-width: 45%;
+			}
+			.adjacent .newer {
+				margin-left: auto;
+				text-align: right;
+			}
+			.adjacent .label {
+				display: block;
+				color: rgb(var(--gray));
+				font-size: 0.85em;
+			}
+		</style>
+	</head>
+
+	<body>
+		<Header />
+		<main>
+			<article>
+				<div class="hero-image">
+					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
+				</div>
+				<div class="prose">
+					<div class="title">
+						<div class="date">
+							<FormattedDate date={pubDate} />
+							{
+								updatedDate && (
+									<div class="last-updated-on">
+										마지막 수정 <FormattedDate date={updatedDate} />
+									</div>
+								)
+							}
+						</div>
+						<h1>{title}</h1>
+						{
+							tags.length > 0 && (
+								<div class="tags">
+									{tags.map((tag) => (
+										<a href={`/tags/${tag}/`}>#{tag}</a>
+									))}
+								</div>
+							)
+						}
+						<hr />
+					</div>
+					<slot />
+
+					{
+						(older || newer) && (
+							<nav class="adjacent" aria-label="앞뒤 글">
+								{older && (
+									<a class="older" href={`/posts/${older.id}/`}>
+										<span class="label">더 예전 글</span>
+										{older.data.title}
+									</a>
+								)}
+								{newer && (
+									<a class="newer" href={`/posts/${newer.id}/`}>
+										<span class="label">더 최신 글</span>
+										{newer.data.title}
+									</a>
+								)}
+							</nav>
+						)
+					}
+				</div>
+			</article>
+		</main>
+		<Footer />
+	</body>
+</html>

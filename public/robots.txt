@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# TODO(docs/DESIGN.md §15 Q1): 도메인 확정 시 함께 교체
+Sitemap: https://rud1676.dev/sitemap-index.xml

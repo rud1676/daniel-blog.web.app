@@ -1,0 +1,37 @@
+---
+// TODO(docs/DESIGN.md §15 Q2): 실명·소속 공개 범위를 정한 뒤 서술 수위를 확정할 것.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { AUTHOR, GITHUB_URL, RESUME_URL } from '../consts';
+---
+
+<BaseLayout
+	title="소개"
+	description={`${AUTHOR} — 무슨 일을 하고 무엇에 관심이 있는지.`}
+>
+	<h1>소개</h1>
+
+	<p>
+		{AUTHOR}. 프론트엔드를 주로 합니다. 잘 돌아가는 코드보다 <strong>왜 그렇게 정했는지 설명할 수
+		있는 코드</strong>에 관심이 많습니다.
+	</p>
+
+	<h2>여기에 쓰는 것</h2>
+	<ul>
+		<li>기본값이라 믿었던 게 틀렸던 순간과, 그걸 어떻게 실측으로 확인했는지</li>
+		<li>기술을 고르며 <em>버린</em> 선택지와 그 근거 — 결론보다 판단 기준</li>
+		<li>도구·자동화가 만드는 가짜 진척감에 대한 기록</li>
+	</ul>
+
+	<h2>여기에 쓰지 않는 것</h2>
+	<ul>
+		<li>문서를 그대로 옮긴 튜토리얼</li>
+		<li>회사·고객사를 특정할 수 있는 내용 (경험을 쓸 땐 일반화하고 코드는 재작성합니다)</li>
+	</ul>
+
+	<h2>링크</h2>
+	<ul>
+		<li><a href={GITHUB_URL} target="_blank" rel="noopener">GitHub</a></li>
+		{RESUME_URL && <li><a href={RESUME_URL} target="_blank" rel="noopener">이력서</a></li>}
+		<li><a href="/rss.xml">RSS</a></li>
+	</ul>
+</BaseLayout>

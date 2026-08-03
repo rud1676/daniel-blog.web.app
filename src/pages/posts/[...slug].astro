@@ -1,0 +1,27 @@
+---
+import { render } from 'astro:content';
+import PostLayout from '../../layouts/PostLayout.astro';
+import { getAdjacentPosts, getPublishedPosts, type Post } from '../../lib/posts';
+
+export async function getStaticPaths() {
+	// draft는 여기서 걸러지므로 경로 자체가 생성되지 않는다 (DESIGN.md §5.2)
+	const posts = await getPublishedPosts();
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post, ...getAdjacentPosts(posts, post.id) },
+	}));
+}
+
+interface Props {
+	post: Post;
+	newer?: Post;
+	older?: Post;
+}
+
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+---
+
+<PostLayout {...post.data} newer={newer} older={older}>
+	<Content />
+</PostLayout>
