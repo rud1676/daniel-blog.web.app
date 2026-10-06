@@ -63,17 +63,28 @@ public/images/             # 글 이미지
 island를 하나 추가할 때마다 다시 잰다. `client:load`를 습관적으로 쓰지 말고
 `client:visible` / `client:idle`을 먼저 고려한다.
 
-## 배포 (Cloudflare Pages)
+## 배포 (Firebase Hosting)
 
-- 빌드 커맨드 `npm run build` / 출력 디렉터리 `dist` / Node 22
-- Web Analytics는 Pages 대시보드에서 토글 ON (코드 변경 없음, 쿠키리스)
+- GCP 리소스는 콘솔이 아니라 [`infra/`](./infra/README.md)의 Terraform으로 만든다. `apply`는 사람이 `plan`을 읽고 승인한 뒤에만.
+  - `infra/bootstrap/` — GCP 프로젝트 `daniel-blog-1676` · state 버킷 · 월 예산 알림
+  - `infra/main/` — Firebase 프로젝트 · Hosting 사이트 `daniel-blog`
+- 사이트 응답 헤더·캐시·리다이렉트는 `firebase.json`, 배포 대상은 `.firebaserc`.
+- 지금은 로컬에서 배포한다 (GitHub Actions + WIF는 다음 단계):
+  ```bash
+  npm run build
+  npx firebase deploy --only hosting:blog   # → https://daniel-blog.web.app
+  ```
+- Web Analytics는 Cloudflare Web Analytics **JS 비컨 스니펫**으로 붙인다 (쿠키리스, ADR-006)
 - 배포 당일 Search Console에 `sitemap-index.xml` 제출 — 색인 데이터는 소급되지 않는다
 
 ## 남은 일
 
 - [ ] **도메인 확정** (DESIGN.md §15 Q1) → `astro.config.mjs`의 `site`, `public/robots.txt`, `src/consts.ts` 세 곳을 함께 교체
 - [ ] `/about` 실명·소속 공개 수위 확정 (§15 Q2), `RESUME_URL` 채우기
-- [ ] Cloudflare Pages 연결 + 도메인 + HTTPS
+- [x] `infra/bootstrap` apply — GCP 프로젝트 · state 버킷(GCS) · 예산 알림
+- [ ] `infra/main` apply → 첫 배포 (`daniel-blog.web.app`)
+- [ ] GitHub Actions 배포 (Workload Identity Federation · 배포 서비스 계정)
+- [ ] 커스텀 도메인 연결 + HTTPS (등록업체 DNS에 TXT·A 레코드)
 - [ ] Search Console 등록 + 사이트맵 제출
 - [ ] 초고 2편(`draft: true`) 완성 — 글 3편이 M1 완료 조건
 - [ ] 성능 예산 실측 기록
