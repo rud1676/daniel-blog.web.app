@@ -6,6 +6,7 @@
 > - 작성일: 2026-08-03
 > - 작성 배경: "이력서에 내가 어떤 고민을 하는 사람인지 드러내고 싶다" + "유입 분석도 하고 싶다"는 논의 결과
 > - 상태: **설계 확정, 구현 전**
+> - 갱신: 2026-10-06 — 호스팅을 Cloudflare Pages → **GCP Firebase Hosting + Terraform**으로 변경 (ADR-006). 영향받은 §1.1·§3·§9·§11·§12에 표시해 둠
 
 ---
 
@@ -27,6 +28,7 @@
 1. **"어떤 고민을 하고 문제를 어떻게 푸는 사람인가"를 드러내는 글의 발행처.** 이력서·포트폴리오에서 링크 하나로 가리킬 수 있는 허브.
 2. **흩어진 결과물의 집결지.** GitHub / 강의 학습기록 / 프로젝트가 한 도메인 아래 모인다.
 3. **사이트 자체가 코드 샘플.** 프론트엔드 직군에서 개인 사이트는 취향·성능 감각·판단력이 3초 만에 읽히는 물건이다.
+   - 후속 (2026-10-06): 블로그로 보여 줄 역량의 중심을 **인프라**로 옮겼다. 이제 코드 샘플의 중심은 화면이 아니라 **사이트를 띄우는 인프라 코드(`infra/`)와 배포 파이프라인**이다 (ADR-006).
 
 ### 1.2 명시적 비목표
 
@@ -85,7 +87,7 @@
 - **버린 대안**: Next.js App Router + **Velite** 또는 **Content Collections**(Contentlayer의 드롭인 후속). 기술적으로는 충분히 유효한 선택지다 — 단 **Contentlayer는 유지보수 중단이므로 어떤 경우에도 쓰지 않는다.**
 - **뒤집는 조건**: 이력서에서 "Next.js 실무 깊이"를 블로그로 증명해야 하는 상황이 생길 때. (그때도 블로그 이전이 아니라 별도 서브도메인 프로젝트를 권장)
 
-### ADR-003 — 호스팅은 **Cloudflare Pages**
+### ADR-003 — 호스팅은 **Cloudflare Pages** (⚠️ 2026-10-06 ADR-006으로 대체)
 
 - **결정**: Cloudflare Pages + 커스텀 도메인. 어댑터는 기본 static 출력으로 시작.
 - **근거**: Astro 팀이 Cloudflare 소속이라 **`@astrojs/cloudflare` 어댑터가 Astro 6에서 재작성**됐고 우선 지원 대상이다. 무료 티어로 충분하고, **Cloudflare Web Analytics(ADR-004)를 코드 변경 없이 토글로 켤 수 있다.**
@@ -110,6 +112,33 @@
 - **버린 대안**: **Quartz v4** — Obsidian vault를 백링크·그래프뷰와 함께 사이트로 뽑는 좋은 도구지만, 위 이유로 전체 발행이 불가하고 "선별 발행"만 할 거면 Astro 대비 이점이 사라진다. (디지털 가든을 본격적으로 하고 싶어지면 재검토)
 - **뒤집는 조건**: 글이 아니라 "연결된 노트 뭉치"를 공개하는 쪽으로 목적이 바뀔 때.
 
+### ADR-006 — 호스팅을 **GCP Firebase Hosting + Terraform**으로 바꾼다 (ADR-003 대체)
+
+- **날짜**: 2026-10-06
+- **결정**: Firebase Hosting(정적 출력)에 배포한다. GCP 리소스는 콘솔 클릭이 아니라 **레포 안 `infra/`의 Terraform**으로 만들고, GitHub Actions는 **Workload Identity Federation(키 없는 인증)**으로 배포한다. 비용 목표는 **월 0원**.
+- **배경 (ADR-003의 전제가 바뀜)**: 블로그로 보여 줄 역량의 중심이 프론트엔드에서 **인프라**로 옮겨졌다(§1.1-3 후속). 관리형 호스팅에 git 연결만 하면 블로그는 뜨지만 "인프라를 직접 구성한 증거"가 남지 않는다. AWS(EKS·Terraform·CloudFront)는 실무와 다른 프로젝트에서 이미 깊게 다뤄 봤으므로, 블로그는 **다른 클라우드(GCP)** 경험을 쌓는 데 쓴다.
+- **근거**:
+  - **0원**: Spark 무료 한도가 저장 10GB · 전송 360MB/일이고, 커스텀 도메인 + SSL이 무료다 (firebase.google.com/pricing, 2026-10-06 확인). 개인 블로그 트래픽엔 충분하다.
+  - **IaC 가능**: `google-beta` provider에 `google_firebase_hosting_site`, `google_firebase_hosting_custom_domain`이 있다. 사이트·도메인·WIF·서비스 계정·예산 알림을 전부 코드로 만든다.
+  - **ADR-003이 GitHub Pages를 버린 이유(헤더 제어)를 그대로 충족**: `firebase.json`으로 응답 헤더·301 리다이렉트·`cleanUrls`를 제어하고, PR별 preview channel도 있다.
+  - 공고 기준으로 AWS 다음으로 많이 나오는 클라우드가 GCP다.
+- **0원을 지키는 장치**:
+  - DNS는 Cloud DNS(존당 월 약 $0.2)를 쓰지 않고 **도메인 등록업체의 무료 DNS**를 쓴다.
+  - Terraform state용 GCS 버킷 때문에 결제 계정은 연결하되, 버킷은 무료 한도 리전(`us-central1`)에 두고 **$1 예산 알림을 Terraform으로** 건다. (결제 계정을 연결하면 Firebase가 Blaze로 바뀌지만 무료 한도는 동일하게 적용된다)
+  - Terraform `apply`는 사람이 승인한 뒤에만 실행한다 (AI는 `plan`까지).
+- **버린 대안**:
+  - **AWS S3 + CloudFront** — 거의 0원이고 가장 익숙하지만, 이미 다른 프로젝트에서 같은 구성을 해 봐서 새로 얻는 게 적다.
+  - **GCS + 외부 Application LB + Cloud CDN** — S3 + CloudFront에 해당하는 구성. GCP에선 CDN이 LB의 옵션이라 LB 한 벌이 필요하고, 포워딩 규칙 고정비로 **월 약 $18**이 나온다. (학습용으로 띄웠다가 `destroy`하는 과제로는 남겨 둔다)
+  - **Cloud Run (nginx 컨테이너)** — 무료 티어 안이지만 정적 블로그에 컨테이너는 과하고, 커스텀 도메인 매핑이 Preview다.
+  - **Azure Static Web Apps (Free)** — 0원이지만 국내 공고에서 Azure 비중이 낮다.
+  - **Naver Cloud** — 상시 무료 티어가 없고(가입 크레딧만), GitHub Actions 키 없는 배포(OIDC) 지원을 확인하지 못했다. 공고에서도 0건.
+  - **GitHub Pages** — ADR-003과 같은 이유(헤더·리다이렉트 제어 불가)로 탈락.
+  - **Cloudflare Pages 유지** — 가장 빠르지만 인프라 증거가 남지 않는다.
+- **영향**:
+  - ADR-004의 Cloudflare Web Analytics는 "Pages 토글" 대신 **JS 비컨 스니펫**으로 붙인다(쿠키리스 유지, 스크립트 1개). 이 스크립트도 §10 예산에 포함해 잰다.
+  - `@astrojs/cloudflare` 어댑터는 쓰지 않는다. 기본 static 출력 그대로.
+- **뒤집는 조건**: 무료 전송 한도(360MB/일)를 꾸준히 넘을 때, 또는 SSR이 필요해질 때.
+
 ---
 
 ## 3. 아키텍처
@@ -119,7 +148,7 @@ graph LR
     A["작업 저널<br/>(그날의 고민·저울질)"] --> B["Obsidian vault<br/>BLOG/*.md"]
     B -->|"선별 복사 (수동)"| C["blog repo<br/>src/content/posts/*.md"]
     C --> D["astro build<br/>(content collections + Zod)"]
-    D --> E["Cloudflare Pages<br/>(git push 시 자동 배포)"]
+    D --> E["Firebase Hosting<br/>(GitHub Actions + WIF 배포, infra/ Terraform)"]
     E --> F["커스텀 도메인"]
     F -.->|"canonical 지정"| G["velog 크로스포스팅"]
     F --> H["Search Console<br/>(검색어·노출·클릭)"]
@@ -261,10 +290,10 @@ Obsidian 마크다운과 Astro 마크다운은 100% 호환되지 않는다. 복�
 
 ## 9. 계측 설정 (구체 절차)
 
-1. **Search Console** — 도메인 소유 확인(Cloudflare DNS면 TXT 레코드 자동) → `sitemap-index.xml` 제출.
+1. **Search Console** — 도메인 소유 확인(등록업체 DNS에 TXT 레코드 추가) → `sitemap-index.xml` 제출.
    - 볼 것: **쿼리 탭**(어떤 질문에 잡히나) > 페이지 탭 > 나머지.
    - 참고: 2026-06-03 **AI Performance Report**가 나왔지만 현재 **노출만 제공**(클릭·CTR·쿼리별 분해 없음)이고 롤아웃이 제한적이다. 기대치를 낮춰 잡는다.
-2. **Cloudflare Web Analytics** — Pages 대시보드에서 토글 ON. 코드 변경 없음.
+2. **Cloudflare Web Analytics** — ~~Pages 대시보드에서 토글 ON~~ → (ADR-006) Cloudflare 대시보드에서 사이트 추가 후 **JS 비컨 스니펫을 `BaseHead.astro`에** 넣는다.
 3. **보는 지표는 3개로 제한한다** (ADR-004, §13):
    - 어떤 **검색어**로 들어오나 (GSC)
    - 어느 **글**이 읽히나 (Top Pages)
@@ -298,7 +327,8 @@ npx astro add mdx        # 필요할 때만
 npx astro add react      # M2 댓글 붙일 때
 ```
 
-- **Node**: LTS 고정 (Cloudflare Pages 빌드 설정과 `.nvmrc` 일치시킬 것)
+- **Node**: LTS 고정 (GitHub Actions의 `setup-node`가 `.nvmrc`를 읽게 할 것)
+- **배포**: GitHub Actions → `google-github-actions/auth`(WIF) → `firebase deploy --only hosting`. 출력 디렉터리 `dist`는 `firebase.json`의 `hosting.public`으로 지정 (ADR-006)
 - **빌드 커맨드**: `npm run build` / 출력 디렉터리: `dist`
 - **코드 하이라이팅**: Astro 내장 Shiki를 그대로 쓴다 (빌드 타임 처리 = 런타임 JS 0). Prism.js 같은 클라이언트 하이라이터를 추가하지 않는다.
 - **다크모드**: CSS `prefers-color-scheme`만으로 시작. 토글 버튼은 island가 필요하므로 M2 이후.
@@ -311,7 +341,11 @@ npx astro add react      # M2 댓글 붙일 때
 
 - [ ] 도메인 구매 (`.dev` 권장 — HTTPS 강제라 신뢰 신호가 되고 개발자 도메인으로 읽힌다)
 - [ ] `npm create astro@latest -- --template blog`
-- [ ] **템플릿 디자인 그대로** Cloudflare Pages 배포 + 도메인 연결
+- [ ] ~~**템플릿 디자인 그대로** Cloudflare Pages 배포 + 도메인 연결~~ → (ADR-006) 아래로 대체
+- [ ] GitHub 원격 레포 생성 + push
+- [ ] `infra/` Terraform: state 버킷 부트스트랩 → Firebase 사이트 · WIF · 배포 서비스 계정 · $1 예산 알림
+- [ ] GitHub Actions 배포 워크플로 → 템플릿 디자인 그대로 첫 배포
+- [ ] 커스텀 도메인 연결 (등록업체 DNS에 TXT·A 레코드)
 - **완료 정의**: 커스텀 도메인으로 기본 템플릿이 뜬다. **디자인을 손대지 않는다.**
 
 ### M1 — 발행 가능 상태 (목표: 1주)
@@ -319,7 +353,7 @@ npx astro add react      # M2 댓글 붙일 때
 - [ ] §5 스키마 적용, §6 페이지 구성
 - [ ] sitemap + RSS + OG 메타
 - [ ] Search Console 등록 + 사이트맵 제출
-- [ ] Cloudflare Web Analytics ON
+- [ ] Cloudflare Web Analytics 비컨 스니펫 추가 (ADR-006)
 - [ ] **글 3편 발행** (§14 후보에서)
 - [ ] §10 성능 예산 실측 기록
 - **완료 정의**: §1.3의 S1~S6 전부 충족.

@@ -1,6 +1,6 @@
 # daniel-blog
 
-개인 기술 블로그. **Astro + Cloudflare Pages**, 정적 출력, island 0개로 시작한다.
+개인 기술 블로그. **Astro + GCP Firebase Hosting(Terraform으로 구성)**, 정적 출력, island 0개로 시작한다. (호스팅 변경 근거: DESIGN.md ADR-006)
 
 설계 근거·ADR·마일스톤은 **[`docs/DESIGN.md`](./docs/DESIGN.md)가 정본**이다.
 결정을 바꿀 땐 기존 ADR을 지우지 말고 새 항목을 덧붙인다.
@@ -14,7 +14,7 @@ npm run build    # → dist/
 npm run preview
 ```
 
-Node는 `.nvmrc`(22) 기준. Cloudflare Pages 빌드 설정도 같은 버전으로 맞춘다.
+Node는 `.nvmrc`(22) 기준. GitHub Actions 배포도 같은 버전으로 맞춘다.
 
 ## 글 쓰는 법
 
