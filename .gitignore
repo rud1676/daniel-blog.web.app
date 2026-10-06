@@ -20,5 +20,15 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
-# jetbrains setting folder
+# editor setting folders
 .idea/
+.vscode/
+
+# terraform (lock 파일은 커밋한다)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+*.tfvars
+!*.tfvars.example
