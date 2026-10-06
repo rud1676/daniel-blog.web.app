@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "daniel-blog-1676"
+  },
+  "targets": {
+    "daniel-blog-1676": {
+      "hosting": {
+        "blog": ["daniel-blog"]
+      }
+    }
+  }
+}
