@@ -1,0 +1,82 @@
+---
+import { type Layer } from '../lib/layers';
+import { getLayerCounts, type Post } from '../lib/posts';
+import PostTable from './PostTable.astro';
+
+/**
+ * /posts 와 /posts/layer/<레이어> 가 같이 쓰는 화면.
+ * 필터 칩은 버튼이 아니라 미리 빌드한 정적 페이지로 가는 링크다 → JS 0.
+ * 글이 0편인 레이어는 칩도 페이지도 만들지 않는다 (getLayerCounts).
+ */
+interface Props {
+	/** 발행 글 전체 (칩 숫자용) */
+	all: Post[];
+	/** 지금 고른 레이어. 없으면 전체 */
+	layer?: Layer;
+}
+
+const { all, layer } = Astro.props;
+const shown = layer ? all.filter((post) => post.data.layers?.includes(layer)) : all;
+const counts = getLayerCounts(all);
+---
+
+<h1 class="sec">
+	{layer ? <>{layer}를 거친 글</> : '전체 글'} <span class="dim">{shown.length}</span>
+</h1>
+
+{
+	all.length > 0 && (
+		<nav class="filters" aria-label="영역 필터">
+			<a href="/posts" class:list={['ly', { on: !layer }]} style="color: var(--hi)" aria-current={!layer ? 'page' : undefined}>
+				all {all.length}
+			</a>
+			{counts.map(({ layer: l, count }) => (
+				<a
+					href={`/posts/layer/${l}`}
+					class:list={['ly', { on: l === layer }]}
+					style={`color: var(--${l})`}
+					aria-current={l === layer ? 'page' : undefined}
+				>
+					{l} {count}
+				</a>
+			))}
+		</nav>
+	)
+}
+
+<PostTable posts={shown} />
+
+<style>
+	.sec {
+		margin: 4px 0 12px;
+		color: var(--hi);
+		font: 600 15px var(--sans);
+	}
+	.sec .dim {
+		margin-left: 4px;
+		font-weight: 400;
+	}
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin: 0 0 14px;
+	}
+	.ly {
+		display: inline-block;
+		padding: 1px 7px;
+		border: 1px solid currentColor;
+		border-radius: 3px;
+		font: 12px/1.5 var(--mono);
+		white-space: nowrap;
+	}
+	/* 목업은 안 고른 칩을 opacity 0.7로 흐리게 했지만, 라이트 테마에서 대비가 4.5:1 아래로 떨어져
+	   흐리기 대신 고른 칩만 배경 + 굵게 표시한다. */
+	.ly:hover {
+		background: var(--hover);
+	}
+	.ly.on {
+		background: var(--chipon);
+		font-weight: 600;
+	}
+</style>

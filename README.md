@@ -66,10 +66,10 @@ draft: true                   # 발행할 때 false로 바꾸거나 줄을 지�
 src/
   content.config.ts        # 컬렉션 스키마 (Zod 검증)
   content/posts/           # 발행 글 — Obsidian에서 복사
-  lib/posts.ts             # draft 필터·정렬·태그 집계 (모든 페이지가 여기를 거친다)
+  lib/posts.ts             # draft 필터·정렬·레이어 집계 (모든 페이지가 여기를 거친다)
   components/              # 인터랙션 없으면 반드시 .astro
   layouts/                 # BaseLayout(일반 페이지) / PostLayout(글)
-  pages/                   # /, /posts, /posts/[slug], /tags/[tag], /about, /rss.xml
+  pages/                   # /, /posts, /posts/layer/[layer], /posts/[slug], /about, /rss.xml
 public/images/             # 글 이미지
 ```
 
