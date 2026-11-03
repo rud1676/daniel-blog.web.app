@@ -1,0 +1,13 @@
+---
+/*
+  <head> 맨 앞에 넣는 인라인 스크립트. 그리기 전에 html[data-theme]를 정해 깜빡임을 막는다.
+  - 저장값(localStorage.theme)이 있으면 그것, 없으면 OS 설정(prefers-color-scheme).
+  - 저장값이 없으면 OS 설정이 바뀔 때 따라간다.
+  - [data-theme-toggle] 버튼 클릭 → 반대 테마로 바꾸고 저장. 터미널 `theme` 명령도 window.__setTheme을 쓴다.
+  읽기 경험용이라 글 상세 JS 예산(≤ 10kB) 안에서 허용된다. is:inline이라 번들·압축되지 않고 HTML에 그대로 박힌다 → 직접 한 줄로 줄여 둔다(약 0.5kB).
+*/
+---
+
+<script is:inline>
+	(function(){var d=document.documentElement,m=matchMedia('(prefers-color-scheme: light)'),s=null;try{s=localStorage.getItem('theme')}catch(e){}function a(t){d.dataset.theme=t}a(s=='dark'||s=='light'?s:m.matches?'light':'dark');m.addEventListener('change',function(e){s||a(e.matches?'light':'dark')});window.__setTheme=function(t){s=t;a(t);try{localStorage.setItem('theme',t)}catch(e){}};document.addEventListener('click',function(e){e.target.closest&&e.target.closest('[data-theme-toggle]')&&__setTheme(d.dataset.theme=='light'?'dark':'light')})})();
+</script>

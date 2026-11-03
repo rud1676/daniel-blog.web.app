@@ -3,7 +3,7 @@
 // TODO: 공개 도메인 kyungjin.dev 연결 후 astro.config.mjs의 `site`와 함께 교체할 것.
 export const SITE_TITLE = 'Daniel';
 export const SITE_DESCRIPTION =
-	'프론트엔드 개발자 Daniel. 어떤 판단을 왜 그렇게 내렸는지, 뒤집힌 과정까지 남기는 기록.';
+	'인프라를 주로 다루는, 레이어를 넘나드는 개발자 Daniel의 기록. 고른 것보다 버린 것과 그 이유를 남긴다.';
 
 export const AUTHOR = 'Daniel';
 export const GITHUB_URL = 'https://github.com/rud1676';

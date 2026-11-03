@@ -40,14 +40,14 @@ const { title, description, pubDate, updatedDate, heroImage, tags, canonical, ne
 				display: block;
 				margin: 0 auto;
 				border-radius: 12px;
-				box-shadow: var(--box-shadow);
+				
 			}
 			.prose {
 				width: 720px;
 				max-width: calc(100% - 2em);
 				margin: auto;
 				padding: 1em;
-				color: rgb(var(--gray-dark));
+				color: var(--tx);
 			}
 			.title {
 				margin-bottom: 1em;
@@ -60,7 +60,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags, canonical, ne
 			}
 			.date {
 				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
+				color: var(--dim);
 			}
 			.last-updated-on {
 				font-style: italic;
@@ -75,13 +75,13 @@ const { title, description, pubDate, updatedDate, heroImage, tags, canonical, ne
 			.tags a {
 				padding: 0.15em 0.6em;
 				border-radius: 999px;
-				background: rgb(var(--gray-light));
-				color: rgb(var(--gray-dark));
+				background: var(--line);
+				color: var(--tx);
 				font-size: 0.85em;
 				text-decoration: none;
 			}
 			.tags a:hover {
-				color: rgb(var(--accent));
+				color: rgb(var(--acc));
 			}
 			.adjacent {
 				display: flex;
@@ -89,7 +89,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags, canonical, ne
 				gap: 1em;
 				margin-top: 3em;
 				padding-top: 1.5em;
-				border-top: 1px solid rgb(var(--gray-light));
+				border-top: 1px solid var(--line);
 				font-size: 0.95em;
 			}
 			.adjacent a {
@@ -101,7 +101,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags, canonical, ne
 			}
 			.adjacent .label {
 				display: block;
-				color: rgb(var(--gray));
+				color: var(--dim);
 				font-size: 0.85em;
 			}
 		</style>

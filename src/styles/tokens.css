@@ -1,0 +1,108 @@
+/*
+  색 토큰. 컴포넌트 CSS에는 hex를 쓰지 않고 여기 변수만 쓴다.
+  다크 = GitHub Primer dark 계열, 라이트 = Primer light.
+  레이어 색(--front … --tooling)은 두 모드에서 의미가 같다: front 파랑 · server 초록 · infra 주황 · db 보라 · ai 빨강.
+  레이어를 추가하면 src/lib/layers.ts 와 여기 두 블록(+ prefers-color-scheme 블록)에 함께 넣는다.
+
+  테마 결정 순서: <head> 인라인 스크립트가 localStorage → OS 설정 순으로 html[data-theme]를 정한다.
+  JS가 꺼져 있으면 data-theme가 없으므로 아래 @media 블록이 OS 설정을 따른다.
+*/
+
+:root {
+	color-scheme: dark;
+	--bg: #0b0e14;
+	--bg2: #10151e;
+	--line: #1e2633;
+	--tx: #c9d1d9;
+	--dim: #7d8896;
+	--hi: #e6edf3;
+	--ok: #3fb950;
+	--acc: #58d6c9;
+	--panel: #0d1117;
+	--panel2: #161b22;
+	--dot: #30363d;
+	--hover: #111824;
+	--chipon: #161d29;
+	--body: #d0d7de;
+	--drawer: #0a0d13;
+	--glow: rgba(88, 214, 201, 0.08);
+	--shadow: rgba(0, 0, 0, 0.6);
+	--warn: #ffa657;
+	--err: #ff7b72;
+
+	--front: #6cb6ff;
+	--server: #7ee787;
+	--infra: #ffa657;
+	--db: #d2a8ff;
+	--ai: #ff7b72;
+	--build: #79c0ff;
+	--tooling: #e3b341;
+
+	--mono: ui-monospace, Menlo, 'SF Mono', Consolas, monospace;
+	--sans: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
+}
+
+/* 라이트 값은 두 번 적는다: 토글로 고른 경우 / JS 없이 OS가 라이트인 경우 */
+:root[data-theme='light'] {
+	color-scheme: light;
+	--bg: #ffffff;
+	--bg2: #f6f8fa;
+	--line: #d0d7de;
+	--tx: #1f2328;
+	--dim: #59636e;
+	--hi: #1f2328;
+	--ok: #1a7f37;
+	--acc: #0a7d72;
+	--panel: #f6f8fa;
+	--panel2: #eff2f5;
+	--dot: #d0d7de;
+	--hover: #f3f6f9;
+	--chipon: #eaeef2;
+	--body: #24292f;
+	--drawer: #ffffff;
+	--glow: rgba(10, 125, 114, 0.1);
+	--shadow: rgba(31, 35, 40, 0.15);
+	--warn: #bc4c00;
+	--err: #cf222e;
+
+	--front: #0969da;
+	--server: #1a7f37;
+	--infra: #bc4c00;
+	--db: #8250df;
+	--ai: #cf222e;
+	--build: #0550ae;
+	--tooling: #9a6700;
+}
+
+@media (prefers-color-scheme: light) {
+	:root:not([data-theme]) {
+		color-scheme: light;
+		--bg: #ffffff;
+		--bg2: #f6f8fa;
+		--line: #d0d7de;
+		--tx: #1f2328;
+		--dim: #59636e;
+		--hi: #1f2328;
+		--ok: #1a7f37;
+		--acc: #0a7d72;
+		--panel: #f6f8fa;
+		--panel2: #eff2f5;
+		--dot: #d0d7de;
+		--hover: #f3f6f9;
+		--chipon: #eaeef2;
+		--body: #24292f;
+		--drawer: #ffffff;
+		--glow: rgba(10, 125, 114, 0.1);
+		--shadow: rgba(31, 35, 40, 0.15);
+		--warn: #bc4c00;
+		--err: #cf222e;
+
+		--front: #0969da;
+		--server: #1a7f37;
+		--infra: #bc4c00;
+		--db: #8250df;
+		--ai: #cf222e;
+		--build: #0550ae;
+		--tooling: #9a6700;
+	}
+}
