@@ -1,6 +1,6 @@
 # infra
 
-블로그 호스팅 인프라 (GCP Firebase Hosting). 결정 근거는 [`docs/DESIGN.md`](../docs/DESIGN.md) ADR-006.
+블로그 호스팅 인프라 (GCP Firebase Hosting). 월 0원(예산 알림 1,000원)을 기준으로 구성한다.
 
 ## 레이어
 

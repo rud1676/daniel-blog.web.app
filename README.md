@@ -1,9 +1,8 @@
 # daniel-blog
 
-개인 기술 블로그. **Astro + GCP Firebase Hosting(Terraform으로 구성)**, 정적 출력, island 0개로 시작한다. (호스팅 변경 근거: DESIGN.md ADR-006)
+개인 기술 블로그. **Astro + GCP Firebase Hosting(Terraform으로 구성)**, 정적 출력, island 0개로 시작한다.
 
-설계 근거·ADR·마일스톤은 **[`docs/DESIGN.md`](./docs/DESIGN.md)가 정본**이다.
-결정을 바꿀 땐 기존 ADR을 지우지 말고 새 항목을 덧붙인다.
+작업 규칙은 [`AGENTS.md`](./AGENTS.md)를 따른다.
 
 ## 실행
 
@@ -20,7 +19,7 @@ Node는 `.nvmrc`(22) 기준. GitHub Actions 배포도 같은 버전으로 맞춘
 
 1. 원고는 **Obsidian vault의 `BLOG/` 폴더가 원본**이다. vault 전체를 발행하지 않는다.
 2. 발행할 글만 `src/content/posts/`로 복사한다. 파일명이 곧 URL이다 — **영문 kebab-case 고정**.
-3. frontmatter를 `docs/POST_TEMPLATE.md` 형식으로 다시 쓴다. 스키마 위반은 빌드가 막는다.
+3. frontmatter를 아래 [frontmatter](#frontmatter) 형식으로 다시 쓴다. 스키마 위반은 빌드가 막는다.
 4. Obsidian 문법을 정리한다:
    | Obsidian | 처리 |
    |---|---|
@@ -34,6 +33,32 @@ Node는 `.nvmrc`(22) 기준. GitHub Actions 배포도 같은 버전으로 맞춘
 6. `draft: true`면 경로 자체가 생성되지 않는다. 쓰다 만 글은 노출되지 않는다.
 
 **한 번 발행한 슬러그는 바꾸지 않는다.** 불가피하면 `astro.config.mjs`의 `redirects`에 남긴다.
+
+### frontmatter
+
+```yaml
+---
+title: '제목 — 판단이 뒤집힌 지점이 드러나게'
+description: '검색 결과·OG 카드에 노출된다. 160자 이내.'
+pubDate: 'YYYY-MM-DD'
+layers: [server, infra, db]   # 문제가 지나간 영역, 순서 = 흐름. 1~4개
+                              # front · server · infra · db · ai · build · tooling 중에서만
+stance: '이 기술을 나는 이렇게 본다 — 관점 한 줄 (120자 이내)'   # 없으면 description을 보여 준다
+pinned: true                  # 홈 대표 글. 발행 글 중 최대 2편
+# updatedDate: 'YYYY-MM-DD'   # 크게 고쳤을 때만
+# updatedReason: '무엇을 왜 정정했나 한 줄 (100자 이내)'   # 있으면 홈 Events에 Updated로 뜬다. updatedDate 필수
+tags: ['tag-a', 'tag-b']
+draft: true                   # 발행할 때 false로 바꾸거나 줄을 지운다
+# canonical: 'https://...'    # 외부에 먼저 실린 글일 때만
+---
+```
+
+빌드가 막는 경우: 목록 밖 레이어·중복 레이어, 발행 글에 `layers` 없음, `pinned` 발행 글 3편 이상, `updatedDate` 없는 `updatedReason`.
+
+쓰기 전 확인:
+- 결과("무엇을 했다")가 아니라 과정(무엇을 저울질했고 왜 그쪽으로 갔나)이 본문인가?
+- 사내 코드·계정 정보·고객사명이 섞이지 않았는가?
+- dataviewjs 블록, 위키링크, Obsidian 콜아웃을 정리했는가?
 
 ## 구조
 
@@ -74,19 +99,19 @@ island를 하나 추가할 때마다 다시 잰다. `client:load`를 습관적�
   npm run build
   npx firebase deploy --only hosting:blog   # → https://daniel-blog.web.app
   ```
-- Web Analytics는 Cloudflare Web Analytics **JS 비컨 스니펫**으로 붙인다 (쿠키리스, ADR-006)
+- 방문 분석은 Firebase Hosting 요청 로그 → Cloud Logging → BigQuery로 한다(JS 0, 예정). 분석 스크립트는 붙이지 않는다
 - 배포 당일 Search Console에 `sitemap-index.xml` 제출 — 색인 데이터는 소급되지 않는다
 
 ## 남은 일
 
-- [ ] **도메인 확정** (DESIGN.md §15 Q1) → `astro.config.mjs`의 `site`, `public/robots.txt`, `src/consts.ts` 세 곳을 함께 교체
-- [ ] `/about` 실명·소속 공개 수위 확정 (§15 Q2), `RESUME_URL` 채우기
+- [x] 공개 도메인 `kyungjin.dev`로 결정
+- [ ] 도메인 연결 → `astro.config.mjs`의 `site`, `public/robots.txt`, `src/consts.ts` 세 곳을 함께 교체
+- [ ] `/about` 실명·소속 공개 수위 확정, `RESUME_URL` 채우기
 - [x] `infra/bootstrap` apply — GCP 프로젝트 · state 버킷(GCS) · 예산 알림
-- [ ] `infra/main` apply → 첫 배포 (`daniel-blog.web.app`)
+- [x] `infra/main` apply → 첫 배포 (`daniel-blog.web.app`)
 - [ ] GitHub Actions 배포 (Workload Identity Federation · 배포 서비스 계정)
-- [ ] 커스텀 도메인 연결 + HTTPS (등록업체 DNS에 TXT·A 레코드)
+- [ ] 커스텀 도메인 연결 + HTTPS (Cloudflare DNS에 TXT·A 레코드, DNS only)
 - [ ] Search Console 등록 + 사이트맵 제출
-- [ ] 초고 2편(`draft: true`) 완성 — 글 3편이 M1 완료 조건
+- [ ] 초고(`draft: true`) 완성 — 지금 발행 글 0편
 - [ ] 성능 예산 실측 기록
 
-M2 이후(댓글·OG 자동생성·다크모드 토글·검색)는 **글 3편 뒤에** 손댄다.
