@@ -2,11 +2,12 @@
 /*
   글 상세. 읽기 우선 — 콘솔 장식은 상단 메타 박스에만 쓰고, 본문은 산세리프 17px / 행간 1.95 / 폭 720px.
   JS: 테마 인라인 스크립트 + 목차 스크립트(toc.ts)뿐. 예산 ≤ 10kB는 scripts/check-js-budget.mjs가 빌드 후 잰다.
-  글 끝 장치는 "같은 레이어를 거친 글" 하나만 둔다 (수정 이력·저자 카드·이전/다음·질문하기 카드는 뺐다).
+  글 끝: "같은 레이어를 거친 글" + 댓글(giscus, 눌러야 불러옴). 수정 이력·저자 카드·이전/다음·질문하기 카드는 뺐다.
 */
 import type { MarkdownHeading } from 'astro';
 import { Image } from 'astro:assets';
 import BaseHead from '../components/BaseHead.astro';
+import Comments from '../components/Comments.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import LayerRoute from '../components/LayerRoute.astro';
@@ -89,6 +90,7 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 						</section>
 					)
 				}
+				<Comments />
 			</article>
 
 			{

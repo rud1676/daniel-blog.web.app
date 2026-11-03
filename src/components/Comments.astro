@@ -1,0 +1,78 @@
+---
+/*
+  글 끝 댓글 — giscus(GitHub Discussions). 페이지를 열 때는 정적 버튼만 있고,
+  누를 때 giscus.app/client.js를 불러온다 → 글 상세 JS 예산(≤ 10kB)에는 이 작은 로더만 들어간다.
+  - 저장소: 이 레포의 Discussions, 카테고리 Announcements(방문자는 댓글만, 새 토론은 giscus가 만든다)
+  - 글 ↔ 토론 매핑: pathname (도메인이 바뀌어도 이어진다)
+  - 테마: html[data-theme]를 따라가고, 토글하면 iframe에도 알린다
+  레포·카테고리 ID는 공개값이다(페이지 HTML에 그대로 나간다).
+*/
+const GISCUS = {
+	repo: 'rud1676/daniel-blog.web.app',
+	repoId: 'R_kgDOU-HlRg',
+	category: 'Announcements',
+	categoryId: 'DIC_kwDOU-HlRs4DKR7J',
+};
+---
+
+<section class="cm" aria-labelledby="comments" data-giscus={JSON.stringify(GISCUS)}>
+	<h2 id="comments" class="sec">댓글</h2>
+	<div class="slot">
+		<button type="button" class="load mono" data-giscus-load>
+			<span class="p">$</span> comments --load
+		</button>
+		<p class="dim note">GitHub 계정으로 남길 수 있어요. 누르기 전에는 외부 스크립트를 불러오지 않아요.</p>
+		<noscript>
+			<p class="dim note">
+				JavaScript가 꺼져 있어요. <a href={`https://github.com/${GISCUS.repo}/discussions`}>GitHub Discussions</a>에서 볼 수 있어요.
+			</p>
+		</noscript>
+	</div>
+</section>
+
+<script is:inline>
+	(function(){var b=document.querySelector('[data-giscus-load]');if(!b)return;var box=b.closest('[data-giscus]'),c=JSON.parse(box.dataset.giscus),d=document.documentElement,th=function(){return d.dataset.theme=='light'?'light':'dark'};b.addEventListener('click',function(){var s=document.createElement('script'),a={src:'https://giscus.app/client.js','data-repo':c.repo,'data-repo-id':c.repoId,'data-category':c.category,'data-category-id':c.categoryId,'data-mapping':'pathname','data-strict':'1','data-reactions-enabled':'1','data-emit-metadata':'0','data-input-position':'top','data-theme':th(),'data-lang':'ko','data-loading':'lazy',crossorigin:'anonymous',async:''};for(var k in a)s.setAttribute(k,a[k]);box.querySelector('.slot').replaceChildren(s)},{once:true});new MutationObserver(function(){var f=document.querySelector('iframe.giscus-frame');f&&f.contentWindow.postMessage({giscus:{setConfig:{theme:th()}}},'https://giscus.app')}).observe(d,{attributes:true,attributeFilter:['data-theme']})})();
+</script>
+
+<style>
+	.cm {
+		margin: 40px 0 0;
+		padding-top: 8px;
+		border-top: 1px solid var(--line);
+	}
+	.sec {
+		margin: 16px 0 12px;
+		color: var(--hi);
+		font: 600 15px var(--sans);
+	}
+	.load {
+		padding: 10px 14px;
+		border: 1px solid var(--acc);
+		border-radius: 6px;
+		background: var(--panel);
+		color: var(--hi);
+		font-size: 13px;
+		cursor: pointer;
+		box-shadow: 0 0 0 4px var(--glow);
+	}
+	.load:hover {
+		background: var(--hover);
+	}
+	.p {
+		margin-right: 6px;
+		color: var(--ok);
+	}
+	.note {
+		margin: 10px 0 0;
+		font-size: 13px;
+	}
+	.note a {
+		color: var(--front);
+		text-decoration: underline;
+	}
+	/* giscus iframe이 들어온 뒤 */
+	.slot :global(.giscus-frame) {
+		width: 100%;
+		border: 0;
+	}
+</style>
