@@ -2,7 +2,10 @@
 title: '블로그 스택을 고르며 버린 것들 — Jekyll·Next·Quartz를 왜 안 썼나'
 description: '무엇을 골랐는지보다 무엇을 왜 버렸는지가 더 많은 걸 말한다. 개인 기술 블로그 스택을 정하며 탈락시킨 선택지들과 그 근거.'
 pubDate: '2026-08-03'
+layers: [infra, front]
+stance: '무엇을 골랐나보다 무엇을 왜 버렸나가 더 많이 말한다.'
 tags: ['astro', 'decision', 'blog']
+draft: true
 ---
 
 블로그를 만들기로 하고 가장 오래 붙잡은 건 코드가 아니라 **"무엇을 안 쓸 것인가"** 였다.

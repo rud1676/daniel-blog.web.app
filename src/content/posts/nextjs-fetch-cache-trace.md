@@ -2,6 +2,8 @@
 title: '내가 알던 Next.js 캐싱 기본값은 틀렸다 — 빌드 로그 ○/ƒ 심볼로 확인한 것'
 description: 'fetch 기본 캐싱을 두 번 잘못 이해했다가 실측으로 정정한 기록. dev에서 관찰한 걸 운영까지 일반화하면 틀린다.'
 pubDate: '2026-08-03'
+layers: [front, build]
+stance: 'dev에서 본 캐싱은 운영의 캐싱이 아니다. 문서보다 빌드 로그를 먼저 믿는다.'
 tags: ['nextjs', 'caching', 'debugging']
 draft: true
 ---

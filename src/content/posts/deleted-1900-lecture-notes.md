@@ -2,6 +2,8 @@
 title: '강의 노트 1,900개를 넣고 그날 전부 지웠다 — 학습 자료의 적정량에 대해'
 description: '102MB를 채우고 당일 폐기한 판단, 그리고 "볼 수 있는 양만"이라는 운영 규칙을 세우기까지. 도구가 만드는 가짜 진척감에 대해.'
 pubDate: '2026-08-03'
+layers: [tooling, ai]
+stance: '도구가 만드는 진척감은 가짜일 수 있다. 볼 수 있는 양만 남긴다.'
 tags: ['learning', 'tooling', 'retrospective']
 draft: true
 ---
