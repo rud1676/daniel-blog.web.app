@@ -1,37 +1,219 @@
 ---
-// TODO: 실명·소속 공개 범위를 정한 뒤 서술 수위를 확정할 것.
+// `kubectl describe developer/daniel` 형식의 소개. 경력은 Events 타임라인, 프로젝트는 pod 카드. JS 0.
+// 내용은 src/data/about.ts 에 있다.
+import { GITHUB_URL, RESUME_URL } from '../consts';
+import { describe, events, projects } from '../data/about';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { AUTHOR, GITHUB_URL, RESUME_URL } from '../consts';
 ---
 
-<BaseLayout
-	title="소개"
-	description={`${AUTHOR} — 무슨 일을 하고 무엇에 관심이 있는지.`}
->
-	<h1>소개</h1>
+<BaseLayout title="about" description="Daniel — 문제를 따라 레이어를 넘는 개발자. 경력과 프로젝트.">
+	<h1 class="cmd mono"><span class="p">$</span> kubectl describe developer/<em>daniel</em></h1>
 
-	<p>
-		{AUTHOR}. 프론트엔드를 주로 합니다. 잘 돌아가는 코드보다 <strong>왜 그렇게 정했는지 설명할 수
-		있는 코드</strong>에 관심이 많습니다.
-	</p>
+	<dl class="desc">
+		<dt>Name</dt>
+		<dd>{describe.name}</dd>
+		<dt>Role</dt>
+		<dd>{describe.role}</dd>
+		<dt>Approach</dt>
+		<dd>{describe.approach}</dd>
+		<dt>Strengths</dt>
+		<dd>{describe.strengths}</dd>
+		<dt>Contact</dt>
+		<dd><a href={`mailto:${describe.contact}`}>{describe.contact}</a></dd>
+		<dt>Links</dt>
+		<dd class="links">
+			<a href={GITHUB_URL} target="_blank" rel="noopener">github</a>
+			{RESUME_URL && <a href={RESUME_URL} target="_blank" rel="noopener">resume</a>}
+			<a href="/rss.xml">rss</a>
+		</dd>
+	</dl>
 
-	<h2>여기에 쓰는 것</h2>
-	<ul>
-		<li>기본값이라 믿었던 게 틀렸던 순간과, 그걸 어떻게 실측으로 확인했는지</li>
-		<li>기술을 고르며 <em>버린</em> 선택지와 그 근거 — 결론보다 판단 기준</li>
-		<li>도구·자동화가 만드는 가짜 진척감에 대한 기록</li>
-	</ul>
+	<h2 class="mono"><span class="p">$</span> Events:</h2>
+	<div class="ev" role="list">
+		{
+			events.map((e) => (
+				<div class="evr" role="listitem">
+					<span class="t mono">{e.when}</span>
+					<span class:list={['ty mono', { w: e.type === 'Warning' }]}>{e.type}</span>
+					<span class="re mono">{e.reason}</span>
+					<div>
+						<b>{e.title}</b>
+						{e.detail && <span class="m">{e.detail}</span>}
+					</div>
+				</div>
+			))
+		}
+	</div>
 
-	<h2>여기에 쓰지 않는 것</h2>
-	<ul>
-		<li>문서를 그대로 옮긴 튜토리얼</li>
-		<li>회사·고객사를 특정할 수 있는 내용 (경험을 쓸 땐 일반화하고 코드는 재작성합니다)</li>
-	</ul>
-
-	<h2>링크</h2>
-	<ul>
-		<li><a href={GITHUB_URL} target="_blank" rel="noopener">GitHub</a></li>
-		{RESUME_URL && <li><a href={RESUME_URL} target="_blank" rel="noopener">이력서</a></li>}
-		<li><a href="/rss.xml">RSS</a></li>
-	</ul>
+	<h2 class="mono"><span class="p">$</span> Projects:</h2>
+	<div class="pods">
+		{
+			projects.map((p) => {
+				const Tag = p.href ? 'a' : 'div';
+				return (
+					<Tag class="pod" href={p.href} target={p.href?.startsWith('http') ? '_blank' : undefined} rel={p.href ? 'noopener' : undefined}>
+						<div class="n mono">
+							<span class:list={['led', { off: !p.live }]} aria-label={p.live ? '운영 중' : '준비 중'} />
+							{p.name}
+						</div>
+						<div>{p.summary}</div>
+						<div class="st mono dim">{p.stack}</div>
+					</Tag>
+				);
+			})
+		}
+	</div>
 </BaseLayout>
+
+<style>
+	.cmd {
+		margin: 0 0 10px;
+		color: var(--dim);
+		font-size: 13px;
+		font-weight: 400;
+	}
+	.cmd .p,
+	h2 .p {
+		margin-right: 6px;
+		color: var(--ok);
+	}
+	.cmd em {
+		color: var(--hi);
+		font-style: normal;
+	}
+	.desc {
+		display: grid;
+		grid-template-columns: 130px 1fr;
+		gap: 6px 16px;
+		margin: 0;
+		font-size: 15px;
+	}
+	.desc dt {
+		padding-top: 2px;
+		color: var(--acc);
+		font: 13px var(--mono);
+	}
+	.desc dd {
+		margin: 0;
+		color: var(--tx);
+	}
+	.desc a {
+		color: var(--front);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.links {
+		display: flex;
+		gap: 14px;
+		font: 13px var(--mono);
+	}
+	h2 {
+		margin: 30px 0 10px;
+		color: var(--dim);
+		font-size: 13px;
+		font-weight: 400;
+	}
+	.ev {
+		padding: 6px 0;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		background: var(--panel);
+	}
+	.evr {
+		display: grid;
+		grid-template-columns: 78px 86px 110px 1fr;
+		gap: 14px;
+		padding: 11px 18px;
+		border-bottom: 1px solid var(--line);
+		font-size: 14px;
+	}
+	.evr:last-child {
+		border: 0;
+	}
+	.t {
+		color: var(--dim);
+		font-size: 13px;
+	}
+	.ty {
+		color: var(--ok);
+		font-size: 13px;
+	}
+	.ty.w {
+		color: var(--warn);
+	}
+	.re {
+		color: var(--hi);
+		font-size: 13px;
+	}
+	.evr b {
+		color: var(--hi);
+		font-weight: 600;
+	}
+	.m {
+		display: block;
+		color: var(--dim);
+		font-size: 13px;
+	}
+	.pods {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 12px;
+	}
+	.pod {
+		padding: 12px 14px;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		background: var(--panel);
+		font-size: 14px;
+	}
+	a.pod:hover {
+		border-color: var(--acc);
+	}
+	.pod .n {
+		margin-bottom: 4px;
+		color: var(--hi);
+		font-size: 13px;
+	}
+	.pod .st {
+		margin-top: 6px;
+		font-size: 12px;
+	}
+	.led {
+		display: inline-block;
+		width: 8px;
+		height: 8px;
+		margin-right: 8px;
+		border-radius: 50%;
+		background: var(--ok);
+		box-shadow: 0 0 8px var(--ok);
+	}
+	.led.off {
+		background: var(--dot);
+		box-shadow: none;
+	}
+	@media (max-width: 720px) {
+		.desc {
+			grid-template-columns: 1fr;
+			gap: 0;
+		}
+		.desc dd {
+			margin-bottom: 10px;
+		}
+		.evr {
+			grid-template-columns: 66px 1fr;
+			gap: 4px 10px;
+		}
+		.ty {
+			display: none;
+		}
+		.re {
+			grid-column: 2;
+		}
+		.evr > div {
+			grid-column: 1 / 3;
+		}
+		.pods {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
