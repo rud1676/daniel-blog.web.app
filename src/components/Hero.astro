@@ -1,0 +1,107 @@
+---
+import type { EventRow } from '../lib/events';
+import type { Layer } from '../lib/layers';
+
+/**
+ * 홈 히어로: `$ trace developer/daniel` 출력. 포지셔닝을 문구가 아니라 형식으로 말한다.
+ * 터미널 창 모양은 여기(히어로)에만 쓴다 — 글을 창에 가두지 않는다. CSS만, JS 0.
+ */
+interface Props {
+	events: EventRow[];
+}
+
+const { events } = Astro.props;
+
+/** 이 사람이 넘나드는 영역 — 글 레이어 7개 중 포지셔닝에 쓰는 5개 */
+const heroLayers: Layer[] = ['front', 'server', 'infra', 'db', 'ai'];
+const pad = (s: string, n: number) => s.padEnd(n, ' ');
+---
+
+<section class="term" aria-label="소개">
+	<div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>~ — zsh</span></div>
+	<pre><span class="p">$</span> trace developer/daniel
+<b>Name:</b>       Daniel
+<b>Role:</b>       인프라를 주로 다루는, 레이어를 넘나드는 개발자
+<b>Layers:</b>     {heroLayers.map((layer, i) => <>{i > 0 && ' ▸ '}<span style={`color: var(--${layer})`}>{layer}</span></>)}
+<b>Approach:</b>   문제를 따라 레이어를 넘는다.
+            고른 것보다 버린 것과 그 이유를 남긴다.
+<b>Events:</b>{events.length === 0 ? <span class="dim">     &lt;none&gt;</span> : <>
+  <span class="dim">{pad('Type', 9)}{pad('Reason', 11)}{pad('Age', 6)}Message</span>{events.map((e) => <>
+  <span class={e.type === 'Warning' ? 'w' : 'p'}>{pad(e.type, 9)}</span>{pad(e.reason, 11)}{pad(e.age, 6)}{e.href ? <a href={e.href}>{e.message}</a> : e.message}</>)}</>}
+<span class="p">$</span> <span class="cur" aria-hidden="true">▌</span></pre>
+</section>
+
+<style>
+	.term {
+		margin: 0 0 28px;
+		overflow: hidden;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		background: var(--panel);
+	}
+	.bar {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 10px 14px;
+		border-bottom: 1px solid var(--line);
+		background: var(--bg2);
+		color: var(--dim);
+		font: 12px var(--mono);
+	}
+	.bar i {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: var(--dot);
+	}
+	.bar span {
+		margin-left: 10px;
+	}
+	pre {
+		margin: 0;
+		padding: 20px 22px;
+		color: var(--tx);
+		font: 14px/1.75 var(--mono);
+		white-space: pre-wrap;
+	}
+	pre b {
+		color: var(--acc);
+		font-weight: 400;
+	}
+	.p {
+		color: var(--ok);
+	}
+	.w {
+		color: var(--warn);
+	}
+	pre a:hover {
+		color: var(--hi);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.cur {
+		color: var(--acc);
+		animation: blink 1s steps(2) infinite;
+	}
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.cur {
+			animation: none;
+		}
+	}
+	@media (max-width: 720px) {
+		.term {
+			margin: 0 0 20px;
+		}
+		pre {
+			padding: 14px;
+			font-size: 12px;
+			line-height: 1.7;
+		}
+	}
+</style>

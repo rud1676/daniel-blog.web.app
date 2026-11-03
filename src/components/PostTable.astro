@@ -1,0 +1,135 @@
+---
+import { formatAge } from '../lib/age';
+import type { Post } from '../lib/posts';
+import LayerRoute from './LayerRoute.astro';
+
+/**
+ * `kubectl get posts` 표: NAME / LAYERS / STANCE / AGE. 행 전체가 글 링크다.
+ * 홈·/posts·레이어 필터·글 끝 "같은 레이어 글"이 같이 쓴다. JS 0.
+ * 720px 이하에선 카드형(제목·AGE / 레이어 / 관점)으로 다시 배치한다.
+ */
+interface Props {
+	posts: Post[];
+	/** 글이 없을 때 보일 문장 */
+	empty?: string;
+	/** 표 머리글(NAME LAYERS …)을 숨긴다 — 글 끝 관련 글처럼 문맥상 뻔할 때 */
+	headless?: boolean;
+}
+
+const { posts, empty = '아직 발행한 글이 없다.', headless = false } = Astro.props;
+---
+
+{
+	posts.length === 0 ? (
+		<p class="empty dim mono">{empty}</p>
+	) : (
+		<div class="tbl" role="list">
+			{!headless && (
+				<div class="tr th" aria-hidden="true">
+					<div>NAME</div>
+					<div>LAYERS</div>
+					<div>STANCE</div>
+					<div class="age">AGE</div>
+				</div>
+			)}
+			{posts.map((post) => (
+				<a class="tr" href={`/posts/${post.id}/`} role="listitem">
+					<div class="name">
+						{post.data.pinned && <span class="pin">PINNED</span>}
+						{post.data.title}
+						{post.data.tags.length > 0 && (
+							<small>{post.data.tags.slice(0, 2).map((tag) => `#${tag}`).join(' ')}</small>
+						)}
+					</div>
+					<div class="route">{post.data.layers && <LayerRoute layers={post.data.layers} />}</div>
+					<div class="stance">{post.data.stance ?? post.data.description}</div>
+					<div class="age">
+						<time datetime={post.data.pubDate.toISOString()}>{formatAge(post.data.pubDate)}</time>
+					</div>
+				</a>
+			))}
+		</div>
+	)
+}
+
+<style>
+	.tbl {
+		border-top: 1px solid var(--line);
+	}
+	.tr {
+		display: grid;
+		grid-template-columns: minmax(0, 1.5fr) 196px minmax(0, 1.4fr) 56px;
+		gap: 18px;
+		align-items: start;
+		padding: 16px 8px;
+		border-bottom: 1px solid var(--line);
+	}
+	.th {
+		padding: 8px;
+		color: var(--dim);
+		font: 12px var(--mono);
+		letter-spacing: 0.06em;
+	}
+	a.tr:hover {
+		background: var(--hover);
+	}
+	.name {
+		color: var(--hi);
+		font-weight: 600;
+		line-height: 1.5;
+	}
+	.name small {
+		display: block;
+		margin-top: 4px;
+		color: var(--dim);
+		font: 400 12px var(--mono);
+	}
+	.pin {
+		margin-right: 8px;
+		padding: 0 5px;
+		border: 1px solid var(--acc);
+		border-radius: 3px;
+		color: var(--acc);
+		font: 400 11px var(--mono);
+		vertical-align: 2px;
+	}
+	.stance {
+		padding-left: 12px;
+		border-left: 2px solid var(--line);
+		color: var(--tx);
+		font-size: 14px;
+	}
+	.age {
+		color: var(--dim);
+		font: 12px var(--mono);
+		text-align: right;
+	}
+	.empty {
+		padding: 16px 8px;
+		border-top: 1px solid var(--line);
+		border-bottom: 1px solid var(--line);
+	}
+	@media (max-width: 720px) {
+		.tr {
+			grid-template-columns: 1fr 44px;
+			gap: 8px 10px;
+			padding: 16px 4px;
+		}
+		.th {
+			display: none;
+		}
+		.route {
+			grid-column: 1 / 2;
+			grid-row: 2;
+		}
+		.stance {
+			grid-column: 1 / 3;
+			grid-row: 3;
+			font-size: 13px;
+		}
+		.age {
+			grid-column: 2;
+			grid-row: 1;
+		}
+	}
+</style>

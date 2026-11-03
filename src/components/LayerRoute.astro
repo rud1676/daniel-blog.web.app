@@ -1,0 +1,49 @@
+---
+import type { Layer } from '../lib/layers';
+
+/** 레이어 칩 + 화살표. 순서 = 문제가 지나간 흐름. 칩 색은 tokens.css의 --<레이어>. */
+interface Props {
+	layers: readonly Layer[];
+}
+
+const { layers } = Astro.props;
+---
+
+<span class="route">
+	{
+		layers.map((layer, i) => (
+			<>
+				{i > 0 && (
+					<span class="arr" aria-hidden="true">
+						→
+					</span>
+				)}
+				<span class="ly" style={`color: var(--${layer})`}>
+					{layer}
+				</span>
+			</>
+		))
+	}
+</span>
+
+<style>
+	.route {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 2px 0;
+	}
+	.ly {
+		display: inline-block;
+		padding: 1px 7px;
+		border: 1px solid currentColor;
+		border-radius: 3px;
+		font: 12px/1.5 var(--mono);
+		white-space: nowrap;
+	}
+	.arr {
+		margin: 0 3px;
+		color: var(--dim);
+		font: 12px var(--mono);
+	}
+</style>
