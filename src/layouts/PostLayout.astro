@@ -1,21 +1,35 @@
 ---
+/*
+  글 상세. 읽기 우선 — 콘솔 장식은 상단 메타 박스에만 쓰고, 본문은 산세리프 17px / 행간 1.95 / 폭 720px.
+  JS: 테마 인라인 스크립트 + 목차 스크립트(toc.ts)뿐. 예산 ≤ 10kB는 scripts/check-js-budget.mjs가 빌드 후 잰다.
+  글 끝 장치는 "같은 레이어를 거친 글" 하나만 둔다 (수정 이력·저자 카드·이전/다음·질문하기 카드는 뺐다).
+*/
+import type { MarkdownHeading } from 'astro';
 import { Image } from 'astro:assets';
-import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
+import LayerRoute from '../components/LayerRoute.astro';
+import PostTable from '../components/PostTable.astro';
 import type { Post } from '../lib/posts';
 
-type Props = CollectionEntry<'posts'>['data'] & {
-	newer?: Post;
-	older?: Post;
-};
+interface Props {
+	post: Post;
+	headings: MarkdownHeading[];
+	related: Post[];
+	minutes: number;
+}
 
-const { title, description, pubDate, updatedDate, heroImage, tags, canonical, newer, older } =
-	Astro.props;
+const { post, headings, related, minutes } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, canonical, layers, stance, tags } = post.data;
+
+/** 목차는 h2만. 2개 미만이면 목차를 아예 안 그린다. */
+const toc = headings.filter((h) => h.depth === 2);
+const showToc = toc.length >= 2;
+const ymd = (d: Date) => d.toISOString().slice(0, 10);
 ---
 
+<!doctype html>
 <html lang="ko">
 	<head>
 		<BaseHead
@@ -27,137 +41,317 @@ const { title, description, pubDate, updatedDate, heroImage, tags, canonical, ne
 			pubDate={pubDate}
 			updatedDate={updatedDate}
 		/>
-		<style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
-				width: 100%;
-			}
-			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				
-			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: var(--tx);
-			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
-			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: var(--dim);
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-			.tags {
-				display: flex;
-				flex-wrap: wrap;
-				justify-content: center;
-				gap: 0.5em;
-				margin-top: 1em;
-			}
-			.tags span {
-				padding: 0.15em 0.6em;
-				border-radius: 999px;
-				background: var(--line);
-				color: var(--tx);
-				font-size: 0.85em;
-				text-decoration: none;
-			}
-			.adjacent {
-				display: flex;
-				justify-content: space-between;
-				gap: 1em;
-				margin-top: 3em;
-				padding-top: 1.5em;
-				border-top: 1px solid var(--line);
-				font-size: 0.95em;
-			}
-			.adjacent a {
-				max-width: 45%;
-			}
-			.adjacent .newer {
-				margin-left: auto;
-				text-align: right;
-			}
-			.adjacent .label {
-				display: block;
-				color: var(--dim);
-				font-size: 0.85em;
-			}
-		</style>
 	</head>
-
 	<body>
 		<Header />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										마지막 수정 <FormattedDate date={updatedDate} />
-									</div>
-								)
-							}
-						</div>
-						<h1>{title}</h1>
-						{
-							tags.length > 0 && (
-								<div class="tags">
-									{tags.map((tag) => (
-										<span>#{tag}</span>
-									))}
-								</div>
-							)
-						}
-						<hr />
-					</div>
-					<slot />
-
+		<div class="progress" aria-hidden="true"><i></i></div>
+		<div class:list={['postwrap', { 'no-toc': !showToc }]}>
+			<article class="post">
+				<div class="crumb mono"><a href="/posts">~/posts</a> / {post.id}</div>
+				<h1>{title}</h1>
+				<div class="meta mono">
 					{
-						(older || newer) && (
-							<nav class="adjacent" aria-label="앞뒤 글">
-								{older && (
-									<a class="older" href={`/posts/${older.id}/`}>
-										<span class="label">더 예전 글</span>
-										{older.data.title}
-									</a>
-								)}
-								{newer && (
-									<a class="newer" href={`/posts/${newer.id}/`}>
-										<span class="label">더 최신 글</span>
-										{newer.data.title}
-									</a>
-								)}
-							</nav>
+						layers && (
+							<div>
+								<b>LAYERS</b>
+								<LayerRoute layers={layers} />
+							</div>
 						)
 					}
+					<div>
+						<b>DATE</b>
+						<time datetime={pubDate.toISOString()}>{ymd(pubDate)}</time> · {minutes} min read
+						{updatedDate && <> · updated <time datetime={updatedDate.toISOString()}>{ymd(updatedDate)}</time></>}
+					</div>
+					{
+						stance && (
+							<div class="st-row">
+								<b>STANCE</b>
+								<span class="st">{stance}</span>
+							</div>
+						)
+					}
+					{tags.length > 0 && <div class="tags">{tags.map((tag) => `#${tag}`).join(' ')}</div>}
 				</div>
+				{heroImage && <Image class="hero" width={1020} height={510} src={heroImage} alt="" />}
+
+				<div class="body">
+					<slot />
+				</div>
+
+				{
+					related.length > 0 && (
+						<section class="pe" aria-labelledby="related">
+							<h2 id="related" class="sec">
+								같은 레이어를 거친 글
+							</h2>
+							<PostTable posts={related} headless />
+						</section>
+					)
+				}
 			</article>
-		</main>
+
+			{
+				showToc && (
+					<aside class="side">
+						<div class="sidein" data-toc data-minutes={minutes}>
+							<small class="mono dim">ON THIS PAGE</small>
+							<nav class="toc" aria-label="목차">
+								{toc.map((h) => (
+									<a href={`#${h.slug}`} data-slug={h.slug}>
+										{h.text}
+									</a>
+								))}
+							</nav>
+							<div class="readpct mono dim" data-readpct />
+						</div>
+					</aside>
+				)
+			}
+		</div>
 		<Footer />
+		<script>
+			import '../scripts/toc';
+		</script>
 	</body>
 </html>
+
+<style>
+	/* 읽기 진행바: 스크롤 연동 애니메이션(animation-timeline) 지원 브라우저에서만 보인다. JS 0. */
+	.progress {
+		position: sticky;
+		top: 0;
+		z-index: 9;
+		height: 2px;
+	}
+	.progress i {
+		display: none;
+		height: 2px;
+		background: var(--acc);
+		transform-origin: 0 50%;
+	}
+	@supports (animation-timeline: scroll()) {
+		.progress i {
+			display: block;
+			animation: read-progress linear both;
+			animation-timeline: scroll(root);
+		}
+	}
+	@keyframes read-progress {
+		from {
+			transform: scaleX(0);
+		}
+		to {
+			transform: scaleX(1);
+		}
+	}
+
+	.postwrap {
+		display: grid;
+		grid-template-columns: minmax(0, 720px) 220px;
+		gap: 40px;
+		justify-content: center;
+		padding: 0 24px;
+	}
+	.postwrap.no-toc {
+		grid-template-columns: minmax(0, 720px);
+	}
+	.post {
+		padding-top: 40px;
+	}
+	.crumb {
+		color: var(--dim);
+		font-size: 13px;
+	}
+	.crumb a {
+		color: var(--acc);
+	}
+	h1 {
+		margin: 14px 0 18px;
+		color: var(--hi);
+		font-size: 32px;
+		line-height: 1.35;
+		letter-spacing: -0.01em;
+	}
+	.meta {
+		padding: 14px 16px;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		background: var(--panel);
+		color: var(--dim);
+		font-size: 13px;
+		line-height: 1.9;
+	}
+	.meta b {
+		display: inline-block;
+		width: 78px;
+		color: var(--acc);
+		font-weight: 400;
+	}
+	.st-row {
+		display: flex;
+		gap: 6px;
+	}
+	.st-row b {
+		flex: none;
+	}
+	.st {
+		color: var(--hi);
+		font: 14px/1.6 var(--sans);
+	}
+	.tags {
+		margin-top: 4px;
+		font-size: 12px;
+	}
+	.hero {
+		display: block;
+		width: 100%;
+		margin-top: 24px;
+		border-radius: 8px;
+	}
+
+	/* 본문 — 마크다운이 만든 태그라 :global 로 건다 */
+	.body {
+		margin-top: 8px;
+		color: var(--body);
+		font-size: 17px;
+		line-height: 1.95;
+	}
+	.body :global(h2) {
+		margin: 44px 0 12px;
+		color: var(--hi);
+		font-size: 22px;
+		scroll-margin-top: 16px;
+	}
+	.body :global(h3) {
+		margin: 32px 0 10px;
+		color: var(--hi);
+		font-size: 18px;
+		scroll-margin-top: 16px;
+	}
+	.body :global(p) {
+		margin: 0 0 18px;
+	}
+	.body :global(a) {
+		color: var(--front);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.body :global(strong) {
+		color: var(--hi);
+	}
+	.body :global(ul),
+	.body :global(ol) {
+		padding-left: 22px;
+	}
+	.body :global(li) {
+		margin-bottom: 8px;
+	}
+	.body :global(blockquote) {
+		margin: 0 0 18px;
+		padding: 2px 16px;
+		border-left: 3px solid var(--line);
+		color: var(--dim);
+	}
+	.body :global(:not(pre) > code) {
+		padding: 1px 6px;
+		border-radius: 4px;
+		background: var(--panel2);
+		color: var(--acc);
+		font-size: 15px;
+	}
+	.body :global(pre) {
+		margin: 0 0 22px;
+		padding: 14px 16px;
+		overflow: auto;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		background: var(--panel) !important;
+		font: 14px/1.7 var(--mono);
+	}
+	.body :global(table) {
+		width: 100%;
+		margin: 0 0 22px;
+		border-collapse: collapse;
+		font-size: 15px;
+	}
+	.body :global(th),
+	.body :global(td) {
+		padding: 6px 10px;
+		border: 1px solid var(--line);
+		text-align: left;
+	}
+	.body :global(th) {
+		background: var(--panel);
+		color: var(--hi);
+	}
+	.body :global(img) {
+		border-radius: 6px;
+	}
+	.body :global(hr) {
+		margin: 32px 0;
+	}
+
+	.pe {
+		margin: 56px 0 0;
+		padding-top: 8px;
+		border-top: 1px solid var(--line);
+	}
+	.sec {
+		margin: 16px 0 12px;
+		color: var(--hi);
+		font: 600 15px var(--sans);
+	}
+
+	.side {
+		padding-top: 150px;
+	}
+	.sidein {
+		position: sticky;
+		top: 90px;
+	}
+	.toc {
+		margin: 8px 0 12px;
+		padding-left: 14px;
+		border-left: 2px solid var(--line);
+		color: var(--dim);
+		font-size: 14px;
+	}
+	.toc a {
+		display: block;
+		padding: 2px 0;
+	}
+	.toc a:hover {
+		color: var(--hi);
+	}
+	/* toc.ts가 지금 읽는 절에 .on을 붙인다 */
+	.toc a:global(.on) {
+		margin-left: -16px;
+		padding-left: 14px;
+		border-left: 2px solid var(--acc);
+		color: var(--hi);
+	}
+	.readpct {
+		font-size: 12px;
+	}
+
+	@media (max-width: 960px) {
+		.postwrap {
+			grid-template-columns: minmax(0, 720px);
+		}
+		.side {
+			display: none;
+		}
+	}
+	@media (max-width: 720px) {
+		.postwrap {
+			padding: 0 16px;
+		}
+		h1 {
+			font-size: 25px;
+		}
+		.body {
+			font-size: 16px;
+		}
+	}
+</style>

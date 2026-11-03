@@ -80,7 +80,7 @@ public/images/             # 글 이미지
 
 | 항목 | 예산 |
 |---|---|
-| 글 상세 페이지 클라이언트 JS | ≤ 10kB (현재 사실상 0) |
+| 글 상세 페이지 클라이언트 JS | ≤ 10kB (현재 약 1.3kB: 테마 + 목차). `npm run build && npm run check:js` 로 잰다 |
 | 페이지 총 전송량 (이미지 제외) | ≤ 100kB |
 | Lighthouse Performance / SEO / Best Practices | ≥ 95 |
 | LCP (모바일 스로틀링) | ≤ 2.0s |

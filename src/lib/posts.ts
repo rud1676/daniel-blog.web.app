@@ -59,17 +59,3 @@ export function readingMinutes(body: string | undefined): number {
 	const chars = (body ?? '').replace(/\s+/g, '').length;
 	return Math.max(1, Math.ceil(chars / 500));
 }
-
-/**
- * 앞뒤 글. posts는 최신순이므로 index-1이 더 최신, index+1이 더 예전 글이다.
- * "이전/다음"은 읽는 사람마다 반대로 해석해서, 이름을 newer/older로 고정한다.
- * TODO(plan STEP 5): 글 끝 장치를 "같은 레이어 글"만 두기로 해서 글 상세 개편 때 지운다.
- */
-export function getAdjacentPosts(posts: Post[], id: string) {
-	const index = posts.findIndex((post) => post.id === id);
-	if (index === -1) return { newer: undefined, older: undefined };
-	return {
-		newer: posts[index - 1],
-		older: posts[index + 1],
-	};
-}

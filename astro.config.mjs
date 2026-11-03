@@ -14,5 +14,14 @@ export default defineConfig({
 	// redirects: { '/posts/old-slug': '/posts/new-slug' },
 
 	integrations: [mdx(), sitemap()],
+
+	// 코드 블록: 빌드 때 색을 입힌다(JS 0). 두 테마 색을 CSS 변수로 함께 내보내고
+	// global.css가 html[data-theme]에 맞춰 고른다.
+	markdown: {
+		shikiConfig: {
+			themes: { dark: 'github-dark', light: 'github-light' },
+			defaultColor: false,
+		},
+	},
 	// 폰트는 시스템 폰트(tokens.css의 --mono/--sans)를 쓴다. 웹폰트를 받지 않는다.
 });
