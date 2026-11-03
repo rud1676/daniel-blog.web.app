@@ -6,7 +6,6 @@ layers: [server, infra, db]
 stance: 'replicas: 1은 ‘파드는 하나’라는 보장이 아니다. 상태를 메모리에 두는 순간 배포 방식이 버그가 된다.'
 pinned: true
 tags: ['kubernetes', 'k3s', 'rolling-update', 'prisma', 'postgresql']
-draft: true
 ---
 
 ## TL;DR
