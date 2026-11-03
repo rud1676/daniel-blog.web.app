@@ -6,9 +6,9 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-	// TODO: 공개 도메인은 kyungjin.dev (연결 전 임시값).
-	// canonical/OG/사이트맵/RSS가 전부 이 값을 쓰므로 배포 전에 반드시 실제 도메인으로 바꿀 것.
-	site: 'https://rud1676.dev',
+	// 공개 도메인. canonical/OG/사이트맵/RSS가 전부 이 값을 쓴다.
+	// infra/main/domain.tf 의 custom_domain, public/robots.txt 와 같이 움직인다.
+	site: 'https://kyungjin.dev',
 
 	// 발행한 슬러그는 바꾸지 않는다. 불가피하면 여기에 리다이렉트를 남긴다
 	// redirects: { '/posts/old-slug': '/posts/new-slug' },

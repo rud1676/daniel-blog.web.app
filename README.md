@@ -92,12 +92,12 @@ island를 하나 추가할 때마다 다시 잰다. `client:load`를 습관적�
 
 - GCP 리소스는 콘솔이 아니라 [`infra/`](./infra/README.md)의 Terraform으로 만든다. `apply`는 사람이 `plan`을 읽고 승인한 뒤에만.
   - `infra/bootstrap/` — GCP 프로젝트 `daniel-blog-1676` · state 버킷 · 월 예산 알림
-  - `infra/main/` — Firebase 프로젝트 · Hosting 사이트 `daniel-blog`
+  - `infra/main/` — Firebase 프로젝트 · Hosting 사이트 `daniel-blog` · 커스텀 도메인 `kyungjin.dev`
 - 사이트 응답 헤더·캐시·리다이렉트는 `firebase.json`, 배포 대상은 `.firebaserc`.
 - 지금은 로컬에서 배포한다 (GitHub Actions + WIF는 다음 단계):
   ```bash
   npm run build
-  npx firebase deploy --only hosting:blog   # → https://daniel-blog.web.app
+  npx firebase deploy --only hosting:blog   # → https://kyungjin.dev (Firebase 기본 주소 daniel-blog.web.app 도 같은 사이트)
   ```
 - 방문 분석은 Firebase Hosting 요청 로그 → Cloud Logging → BigQuery로 한다(JS 0, 예정). 분석 스크립트는 붙이지 않는다
 - 배포 당일 Search Console에 `sitemap-index.xml` 제출 — 색인 데이터는 소급되지 않는다
@@ -105,7 +105,7 @@ island를 하나 추가할 때마다 다시 잰다. `client:load`를 습관적�
 ## 남은 일
 
 - [x] 공개 도메인 `kyungjin.dev`로 결정
-- [ ] 도메인 연결 → `astro.config.mjs`의 `site`, `public/robots.txt`, `src/consts.ts` 세 곳을 함께 교체
+- [ ] 도메인 연결 — 코드(`site`·`robots.txt`·`infra/main/domain.tf`)는 준비됨. 구매·apply·DNS 등록이 남음
 - [ ] `/about` 실명·소속 공개 수위 확정, `RESUME_URL` 채우기
 - [x] `infra/bootstrap` apply — GCP 프로젝트 · state 버킷(GCS) · 예산 알림
 - [x] `infra/main` apply → 첫 배포 (`daniel-blog.web.app`)

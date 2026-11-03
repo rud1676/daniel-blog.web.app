@@ -16,7 +16,7 @@
 - **계측 스크립트를 넣지 않는다.** GA4·쿠키 배너·경량 분석 스크립트 모두 쓰지 않는다. 방문 분석은 Firebase Hosting 요청 로그 → BigQuery(서버 쪽, JS 0)로 한다. `llms.txt`도 넣지 않는다.
 - `src/content/posts/`의 글은 Obsidian vault에서 복사해 온 것이다.
   내용을 임의로 창작하지 말 것 — 초고(`draft: true`)는 뼈대만 있는 게 정상이다.
-- 공개 도메인은 `kyungjin.dev`(연결 전)다. `astro.config.mjs`의 `site`, `public/robots.txt`, `src/consts.ts`가 함께 움직인다. `daniel-blog.web.app`은 Firebase 기본 주소일 뿐 공개 주소로 쓰지 않는다.
+- 공개 도메인은 `kyungjin.dev`다. `astro.config.mjs`의 `site`, `public/robots.txt`, `infra/main/domain.tf`가 함께 움직인다. `daniel-blog.web.app`은 Firebase 기본 주소일 뿐 공개 주소로 쓰지 않는다.
 
 ## Development
 

@@ -1,6 +1,5 @@
 // 사이트 전역 상수. 여기만 고치면 메타/RSS/푸터가 전부 따라간다.
 
-// TODO: 공개 도메인 kyungjin.dev 연결 후 astro.config.mjs의 `site`와 함께 교체할 것.
 export const SITE_TITLE = 'Daniel';
 export const SITE_DESCRIPTION =
 	'인프라를 주로 다루는, 레이어를 넘나드는 개발자 Daniel의 기록. 고른 것보다 버린 것과 그 이유를 남긴다.';
