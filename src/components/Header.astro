@@ -1,7 +1,6 @@
 ---
-import { GITHUB_URL } from '../consts';
-
-/** 현재 위치 표시용. /posts/… 아래는 전부 posts로 본다. */
+/** 현재 위치 표시용. /posts/… 아래는 전부 posts로 본다.
+ *  rss·github 링크는 헤더에 두지 않고 /about 의 Links에 둔다. */
 const section = Astro.url.pathname.split('/')[1] ?? '';
 const nav = [
 	{ href: '/posts', label: 'posts', key: 'posts' },
@@ -21,8 +20,6 @@ const nav = [
 					</a>
 				))
 			}
-			<a href="/rss.xml">rss</a>
-			<a href={GITHUB_URL} target="_blank" rel="noopener">github</a>
 			<button type="button" class="theme" data-theme-toggle title="기본값: OS 설정">
 				theme: <span class="t-dark">dark</span> / <span class="t-light">light</span>
 			</button>
