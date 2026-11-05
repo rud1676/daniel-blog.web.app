@@ -1,0 +1,211 @@
+---
+// /cli — 블로그를 명령어로 둘러보는 셸 + dagent(AI). JS는 이 페이지에서만 쓴다 (글 상세 예산과 무관).
+// 셸: src/scripts/terminal/index.ts · dagent: 같은 폴더 dagent.ts (실행할 때 import()).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { LAYERS } from '../lib/layers';
+---
+
+<BaseLayout title="cli" description="Daniel 블로그 셸 — 명령어로 글을 둘러보고, dagent로 AI 버전의 Daniel과 대화한다.">
+	<p class="crumb mono"><span class="p">$</span> cd ~/cli <span class="dim"># 블로그를 명령어로 둘러보기 · AI는 dagent</span></p>
+	<section class="z" aria-label="블로그 셸" data-term data-layers={LAYERS.join(' ')}>
+		<div class="zb">
+			<span class="led" data-led aria-hidden="true"></span><b>daniel@blog</b>
+			<span class="dim" data-mode> sh · help로 명령어 보기</span>
+			<span class="zr">⌘K 지우기 · ↑ 기록</span>
+		</div>
+		<div class="out" data-out role="log" aria-live="polite">
+			<p class="dim">Daniel blog shell — help를 입력하면 쓸 수 있는 명령어가 나와요.</p>
+			<p><span class="dim">Tip:</span> <b class="hi">dagent</b><span class="dim">를 실행하면 AI 버전의 Daniel과 대화할 수 있어요.</span></p>
+			<noscript><p class="err">이 페이지는 JavaScript가 필요해요. 글은 <a href="/posts">/posts</a>에서 볼 수 있어요.</p></noscript>
+		</div>
+		<form class="zin" data-form autocomplete="off">
+			<label for="cmd" class="pr" data-prompt>$</label>
+			<input id="cmd" data-input type="text" spellcheck="false" autocapitalize="off" aria-label="명령어 입력" placeholder="help" />
+		</form>
+	</section>
+</BaseLayout>
+
+<script>
+	import '../scripts/terminal/index.ts';
+</script>
+
+<style>
+	.crumb {
+		margin: 0 0 14px;
+		color: var(--tx);
+		font-size: 13px;
+	}
+	.crumb .p {
+		color: var(--ok);
+	}
+	.z {
+		display: flex;
+		flex-direction: column;
+		min-height: 560px;
+		overflow: hidden;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		background: var(--panel);
+	}
+	.zb {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 14px;
+		border-bottom: 1px solid var(--line);
+		background: var(--bg2);
+		color: var(--dim);
+		font: 13px var(--mono);
+	}
+	.zb b {
+		color: var(--hi);
+	}
+	.zr {
+		margin-left: auto;
+		font-size: 12px;
+	}
+	.led {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--ok);
+		box-shadow: 0 0 8px var(--ok);
+	}
+	:global(.led.down) {
+		background: var(--err);
+		box-shadow: 0 0 8px var(--err);
+	}
+	.out {
+		flex: 1;
+		max-height: 62vh;
+		padding: 18px 22px;
+		overflow-y: auto;
+		color: var(--tx);
+		font: 14px/1.75 var(--mono);
+		overflow-wrap: anywhere;
+	}
+	.out :global(p) {
+		min-height: 1.75em;
+		margin: 0;
+		white-space: pre-wrap;
+	}
+	.out :global(a) {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.out :global(a:hover) {
+		color: var(--hi);
+	}
+	.out :global(.hi) {
+		color: var(--hi);
+	}
+	.out :global(.p) {
+		color: var(--ok);
+	}
+	.out :global(.pa) {
+		color: var(--acc);
+	}
+	.out :global(.err) {
+		color: var(--err);
+	}
+	.out :global(.warn) {
+		color: var(--warn);
+	}
+	.out :global(.ans) {
+		color: var(--body);
+		font-family: var(--sans);
+	}
+	.out :global(.hl) {
+		display: grid;
+		grid-template-columns: minmax(0, 28ch) 1fr;
+		gap: 0 2ch;
+		padding-left: 2ch;
+	}
+	.out :global(.row) {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 22ch) 6ch;
+		gap: 0 2ch;
+	}
+	.out :global(.row > span) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.out :global(p.cmd) {
+		margin-top: 0.9em;
+	}
+	.z :global(.badge) {
+		padding: 0 5px;
+		border: 1px solid var(--acc);
+		border-radius: 3px;
+		color: var(--acc);
+		font-size: 11px;
+	}
+	.out :global(.q) {
+		margin: 2px 6px 2px 0;
+		padding: 1px 8px;
+		border: 1px solid var(--line);
+		border-radius: 4px;
+		background: none;
+		color: var(--tx);
+		font: inherit;
+		cursor: pointer;
+	}
+	.out :global(.q:hover) {
+		border-color: var(--acc);
+	}
+	.zin {
+		display: flex;
+		gap: 1ch;
+		align-items: center;
+		padding: 14px 22px;
+		border-top: 1px solid var(--line);
+		font: 14px var(--mono);
+	}
+	.pr {
+		color: var(--ok);
+		white-space: nowrap;
+	}
+	:global(.pr.ai) {
+		color: var(--acc);
+	}
+	input {
+		flex: 1;
+		min-width: 0;
+		padding: 0;
+		border: 0;
+		outline: 0;
+		background: none;
+		color: var(--hi);
+		font: inherit;
+		caret-color: var(--acc);
+	}
+	input::placeholder {
+		color: var(--dot);
+	}
+	@media (max-width: 720px) {
+		.z {
+			min-height: 70vh;
+		}
+		.zr {
+			display: none;
+		}
+		.out {
+			padding: 14px;
+			font-size: 12px;
+		}
+		.out :global(.hl) {
+			grid-template-columns: 1fr;
+		}
+		.out :global(.row) {
+			grid-template-columns: minmax(0, 1fr) 5ch;
+		}
+		.out :global(.row > span:nth-child(2)) {
+			display: none;
+		}
+		.zin {
+			padding: 12px 14px;
+			font-size: 16px; /* iOS 확대 방지 */
+		}
+	}
+</style>
