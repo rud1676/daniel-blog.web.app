@@ -255,6 +255,10 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 		border-left: 3px solid var(--line);
 		color: var(--dim);
 	}
+	/* 인용문 안 마지막 문단의 아래 여백(p 공통 18px) 때문에 글이 위로 쏠려 보이지 않게 */
+	.body :global(blockquote > :last-child) {
+		margin-bottom: 0;
+	}
 	.body :global(:not(pre) > code) {
 		padding: 1px 6px;
 		border-radius: 4px;
