@@ -12,6 +12,7 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import LayerRoute from '../components/LayerRoute.astro';
 import PostTable from '../components/PostTable.astro';
+import { categoryOf } from '../lib/categories';
 import type { Post } from '../lib/posts';
 
 interface Props {
@@ -22,7 +23,7 @@ interface Props {
 }
 
 const { post, headings, related, minutes } = Astro.props;
-const { title, description, pubDate, updatedDate, heroImage, canonical, layers, stance, tags } = post.data;
+const { title, description, pubDate, updatedDate, heroImage, canonical, category, layers, stance, tags } = post.data;
 
 /** 목차는 h2만. 2개 미만이면 목차를 아예 안 그린다. */
 const toc = headings.filter((h) => h.depth === 2);
@@ -48,9 +49,15 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 		<div class="progress" aria-hidden="true"><i></i></div>
 		<div class:list={['postwrap', { 'no-toc': !showToc }]}>
 			<article class="post">
-				<div class="crumb mono"><a href="/posts">~/posts</a> / {post.id}</div>
+				<div class="crumb mono">
+					<a href="/posts">~/posts</a> / <a href={`/posts/category/${category}`}>{category}</a> / {post.id}
+				</div>
 				<h1>{title}</h1>
 				<div class="meta mono">
+					<div>
+						<b>CATEGORY</b>
+						<a class="cat" href={`/posts/category/${category}`}>{category}</a> — {categoryOf(category).description}
+					</div>
 					{
 						layers && (
 							<div>
@@ -167,6 +174,12 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 	}
 	.crumb a {
 		color: var(--acc);
+	}
+	.meta .cat {
+		color: var(--tx);
+	}
+	.meta .cat:hover {
+		color: var(--hi);
 	}
 	h1 {
 		margin: 14px 0 18px;

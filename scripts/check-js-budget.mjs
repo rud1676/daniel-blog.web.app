@@ -6,7 +6,7 @@
 // 안 잰다: 동적 import()로만 닿는 청크 (터미널처럼 "열 때 불러오는" 코드는 예산 밖이다).
 // 단위: 압축 전 바이트. 넘는 글이 하나라도 있으면 exit 1.
 //
-// 같이 검사: "JS 0 페이지"(홈·글 목록·레이어 필터·projects·about·404)에는 테마 인라인 스크립트 말고
+// 같이 검사: "JS 0 페이지"(홈·글 목록·레이어·카테고리 필터·projects·about·404)에는 테마 인라인 스크립트 말고
 //           실행되는 <script>가 없어야 한다. JS는 /cli 와 글 상세(예산 안)에만 둔다.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -54,9 +54,12 @@ if (!existsSync(POSTS)) {
 const kb = (n) => `${(n / 1024).toFixed(2)}kB`;
 let failed = 0;
 
+// /posts/<여기>/<id> 는 글이 아니라 목록 페이지다 (레이어·카테고리 필터)
+const INDEX_DIRS = ['layer', 'category'];
+
 // 1) 글 상세 ≤ 10kB
 const pages = readdirSync(POSTS)
-	.filter((name) => name !== 'layer' && statSync(join(POSTS, name)).isDirectory())
+	.filter((name) => !INDEX_DIRS.includes(name) && statSync(join(POSTS, name)).isDirectory())
 	.map((slug) => ({ slug, file: join(POSTS, slug, 'index.html') }))
 	.filter(({ file }) => existsSync(file));
 
@@ -83,9 +86,9 @@ const jsZero = [
 	'projects/list/index.html',
 	'about/index.html',
 	'404.html',
-	...(existsSync(join(POSTS, 'layer'))
-		? readdirSync(join(POSTS, 'layer')).map((l) => `posts/layer/${l}/index.html`)
-		: []),
+	...INDEX_DIRS.flatMap((dir) =>
+		existsSync(join(POSTS, dir)) ? readdirSync(join(POSTS, dir)).map((id) => `posts/${dir}/${id}/index.html`) : [],
+	),
 ].filter((f) => existsSync(join(DIST, f)));
 
 for (const f of jsZero) {

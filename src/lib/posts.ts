@@ -1,4 +1,5 @@
 import { type CollectionEntry, getCollection } from 'astro:content';
+import { CATEGORIES, type Category } from './categories';
 import { LAYERS, type Layer } from './layers';
 
 export type Post = CollectionEntry<'posts'>;
@@ -39,6 +40,14 @@ export function getLayerCounts(posts: Post[]): Array<{ layer: Layer; count: numb
 	return LAYERS.map((layer) => ({
 		layer,
 		count: posts.filter((post) => post.data.layers?.includes(layer)).length,
+	})).filter(({ count }) => count > 0);
+}
+
+/** 카테고리 → 글 수. 글이 0편인 카테고리는 빠진다 (탭·페이지를 만들지 않는다). CATEGORIES 순서를 따른다. */
+export function getCategoryCounts(posts: Post[]): Array<{ category: Category; count: number }> {
+	return CATEGORIES.map(({ id }) => ({
+		category: id,
+		count: posts.filter((post) => post.data.category === id).length,
 	})).filter(({ count }) => count > 0);
 }
 

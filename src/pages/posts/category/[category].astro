@@ -1,0 +1,24 @@
+---
+import PostsIndex from '../../../components/PostsIndex.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { type Category, categoryOf } from '../../../lib/categories';
+import { getCategoryCounts, getPublishedPosts } from '../../../lib/posts';
+
+// 글이 1편 이상인 카테고리만 페이지를 만든다. 빈 카테고리 주소는 404가 된다.
+// 주소는 /posts/category/<id> — /posts/<id>로 두면 글 slug와 겹칠 수 있다.
+export async function getStaticPaths() {
+	const posts = await getPublishedPosts();
+	return getCategoryCounts(posts).map(({ category }) => ({ params: { category }, props: { category, posts } }));
+}
+
+interface Props {
+	category: Category;
+	posts: Awaited<ReturnType<typeof getPublishedPosts>>;
+}
+
+const { category, posts } = Astro.props;
+---
+
+<BaseLayout title={`${category} 글`} description={`${categoryOf(category).description}.`}>
+	<PostsIndex all={posts} category={category} />
+</BaseLayout>

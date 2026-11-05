@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { CATEGORY_IDS } from './lib/categories';
 import { LAYERS } from './lib/layers';
 
 // frontmatter 오타는 런타임이 아니라 빌드 전에 잡는다.
@@ -16,6 +17,8 @@ const posts = defineCollection({
 				updatedDate: z.coerce.date().optional(),
 				/** 정정 사유 한 줄. 있으면 홈 Events에 `Updated`로 뜬다 */
 				updatedReason: z.string().max(100).optional(),
+				/** 글이 어디서 출발했나. 글당 1개, draft도 필수 (src/lib/categories.ts) */
+				category: z.enum(CATEGORY_IDS),
 				/** 문제가 지나간 영역. 순서 = 흐름 (예: server → infra → db) */
 				layers: z.array(z.enum(LAYERS)).min(1).max(4).optional(),
 				/** 관점 한 줄. 없으면 목록에서 description을 대신 보여 준다 */

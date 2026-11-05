@@ -2,6 +2,7 @@
 title: '페이지 단위로 쪼개겠다고 해 놓고 vendor부터 뗐다'
 description: '"캐시 제외"라던 티켓을 열어 보니 압축 문제였고 소스맵으로 재 보니 무거운 건 라이브러리였다. CloudFront br로 옮긴 뒤 전송량은 오히려 늘었는데, 그래도 결정을 뒤집지 않은 이유를 적었다.'
 pubDate: '2026-11-05'
+category: work
 layers: [infra, build, front]
 stance: '번들을 어디서 쪼개고 압축을 어디서 할지는 직접 잰 숫자와 팀이 정한 득실로 결정한다. 그 득실은 AI가 대신 정해 주지 않는다.'
 tags: ['code-splitting', 'vite', 'cloudfront', 'nginx', 'bundle']

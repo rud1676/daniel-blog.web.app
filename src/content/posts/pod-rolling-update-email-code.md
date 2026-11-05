@@ -2,6 +2,7 @@
 title: '파드는 교체됐는데, 이메일 인증번호는 어디로 갔을까?'
 description: '메모리 Map에 둔 인증번호는 파드를 늘리기 전부터 "파드는 하나"라는 전제 위에 있었다. replicas 1이어도 롤링 업데이트 중엔 파드가 둘이 된다. DB로 옮기며 동시 요청을 쿼리 한 번으로 막은 기록.'
 pubDate: '2026-10-31'
+category: side
 layers: [server, infra, db]
 stance: 'replicas: 1은 ‘파드는 하나’라는 보장이 아니다. 상태를 메모리에 두는 순간 배포 방식이 버그가 된다.'
 pinned: true

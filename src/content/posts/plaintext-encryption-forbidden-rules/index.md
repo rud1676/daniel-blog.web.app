@@ -2,6 +2,7 @@
 title: '운영 중인 DB의 민감정보 평문을 무중단으로 암호화했다 — 키 관리부터 평문 DROP까지'
 description: '건강 기록이 평문으로 쌓인 라이브 DB를 봉투 암호화(KEK/DEK)와 스크립트 백필로 옮기며, 되돌릴 수 있는 순서와 가드레일을 동료와 세워 간 기록.'
 pubDate: '2026-11-04'
+category: work
 layers: [db, server, infra]
 stance: '운영 DB의 민감정보 암호화에서 어려운 건 알고리즘이 아니었다. 키 관리와, 라이브에서 되돌릴 수 있는 순서였다.'
 tags: ['encryption', 'migration', 'dual-write', 'backfill', 'kubernetes']

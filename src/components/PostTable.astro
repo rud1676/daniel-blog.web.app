@@ -36,6 +36,7 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false } = A
 				<a class="tr" href={`/posts/${post.id}/`} role="listitem">
 					<div class="name">
 						{post.data.pinned && <span class="pin">PINNED</span>}
+						<span class="catp">{post.data.category}/</span>
 						{post.data.title}
 						{post.data.tags.length > 0 && (
 							<small>{post.data.tags.slice(0, 2).map((tag) => `#${tag}`).join(' ')}</small>
@@ -53,6 +54,11 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false } = A
 }
 
 <style>
+	.catp {
+		margin-right: 2px;
+		color: var(--dim);
+		font: 400 0.95em var(--mono);
+	}
 	.tbl {
 		border-top: 1px solid var(--line);
 	}

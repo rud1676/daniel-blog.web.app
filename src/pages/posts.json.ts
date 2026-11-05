@@ -6,6 +6,7 @@ export const GET: APIRoute = async () => {
 	const posts = (await getPublishedPosts()).map((p) => ({
 		slug: p.id,
 		title: p.data.title,
+		category: p.data.category,
 		layers: p.data.layers ?? [],
 		stance: p.data.stance ?? p.data.description,
 		pubDate: p.data.pubDate.toISOString(),

@@ -1,34 +1,60 @@
 ---
+import { type Category, categoryOf } from '../lib/categories';
 import { type Layer } from '../lib/layers';
-import { getLayerCounts, type Post } from '../lib/posts';
+import { getCategoryCounts, getLayerCounts, type Post } from '../lib/posts';
 import PostTable from './PostTable.astro';
 
 /**
- * /posts 와 /posts/layer/<레이어> 가 같이 쓰는 화면.
- * 필터 칩은 버튼이 아니라 미리 빌드한 정적 페이지로 가는 링크다 → JS 0.
- * 글이 0편인 레이어는 칩도 페이지도 만들지 않는다 (getLayerCounts).
+ * /posts · /posts/layer/<레이어> · /posts/category/<카테고리> 가 같이 쓰는 화면.
+ * 탭·칩은 버튼이 아니라 미리 빌드한 정적 페이지로 가는 링크다 → JS 0.
+ * 글이 0편인 카테고리·레이어는 탭·칩도 페이지도 만들지 않는다 (getCategoryCounts · getLayerCounts).
+ * 카테고리 페이지에선 레이어 칩 숫자만 그 카테고리 기준으로 센다. 칩 링크는 전체 기준 레이어 페이지 (조합 필터는 없다).
  */
 interface Props {
-	/** 발행 글 전체 (칩 숫자용) */
+	/** 발행 글 전체 (탭 숫자용) */
 	all: Post[];
-	/** 지금 고른 레이어. 없으면 전체 */
+	/** 지금 고른 레이어. layer · category 중 하나만 */
 	layer?: Layer;
+	/** 지금 고른 카테고리 */
+	category?: Category;
 }
 
-const { all, layer } = Astro.props;
-const shown = layer ? all.filter((post) => post.data.layers?.includes(layer)) : all;
-const counts = getLayerCounts(all);
+const { all, layer, category } = Astro.props;
+const base = category ? all.filter((post) => post.data.category === category) : all;
+const shown = layer ? base.filter((post) => post.data.layers?.includes(layer)) : base;
+const cats = getCategoryCounts(all);
+const counts = getLayerCounts(base);
+const allHref = category ? `/posts/category/${category}` : '/posts';
 ---
 
 <h1 class="sec">
-	{layer ? <>{layer}를 거친 글</> : '전체 글'} <span class="dim">{shown.length}</span>
+	{layer ? <>{layer}를 거친 글</> : category ?? '전체 글'} <span class="dim">{shown.length}</span>
 </h1>
 
 {
 	all.length > 0 && (
+		<nav class="cats mono" aria-label="카테고리">
+			<span class="dim">~/posts</span>
+			<a href="/posts" class:list={{ on: !category }} aria-current={!category && !layer ? 'page' : undefined}>
+				all<span class="n">{all.length}</span>
+			</a>
+			{cats.map(({ category: c, count }) => (
+				<a href={`/posts/category/${c}`} class:list={{ on: c === category }} aria-current={c === category ? 'page' : undefined}>
+					{c}
+					<span class="n">{count}</span>
+				</a>
+			))}
+		</nav>
+	)
+}
+
+{category && <p class="desc dim mono">{category} — {categoryOf(category).description}</p>}
+
+{
+	base.length > 0 && (
 		<nav class="filters" aria-label="영역 필터">
-			<a href="/posts" class:list={['ly', { on: !layer }]} style="color: var(--hi)" aria-current={!layer ? 'page' : undefined}>
-				all {all.length}
+			<a href={allHref} class:list={['ly', { on: !layer }]} style="color: var(--hi)" aria-current={!layer && category ? 'page' : undefined}>
+				all {base.length}
 			</a>
 			{counts.map(({ layer: l, count }) => (
 				<a
@@ -55,6 +81,35 @@ const counts = getLayerCounts(all);
 	.sec .dim {
 		margin-left: 4px;
 		font-weight: 400;
+	}
+	.cats {
+		display: flex;
+		gap: 18px;
+		align-items: baseline;
+		margin: 0 0 12px;
+		overflow-x: auto;
+		font-size: 14px;
+		white-space: nowrap;
+	}
+	.cats a {
+		padding-bottom: 3px;
+		border-bottom: 2px solid transparent;
+		color: var(--dim);
+	}
+	.cats a:hover {
+		color: var(--hi);
+	}
+	.cats a.on {
+		border-color: var(--ok);
+		color: var(--hi);
+	}
+	.cats .n {
+		margin-left: 4px;
+		color: var(--dim);
+	}
+	.desc {
+		margin: -4px 0 14px;
+		font-size: 13px;
 	}
 	.filters {
 		display: flex;
