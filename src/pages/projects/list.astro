@@ -1,0 +1,101 @@
+---
+// /projects/list — 모아보기. `kubectl get pods` 표. 행 → /projects#<slug>. JS 0.
+import LayerRoute from '../../components/LayerRoute.astro';
+import ViewTabs from '../../components/projects/ViewTabs.astro';
+import { projects } from '../../data/projects';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="projects — 모아보기" description="Daniel의 개인 프로젝트 목록.">
+	<p class="crumb mono"><span class="p">$</span> kubectl get pods -n projects -o wide</p>
+	<h1 class="sr-only">프로젝트 모아보기</h1>
+	<div class="pl mono" role="list">
+		<div class="plr th" aria-hidden="true">
+			<span>NAME</span><span>STATUS</span><span>LAYERS</span><span>SINCE</span><span>SUMMARY</span>
+		</div>
+		{
+			projects.map((p) => (
+				<a class="plr" href={`/projects#${p.slug}`} role="listitem">
+					<span class="hi">{p.slug}</span>
+					<span>
+						<span class:list={['led', { off: p.status !== 'Running' }]} aria-hidden="true" />
+						{p.status}
+					</span>
+					<span><LayerRoute layers={p.layers} /></span>
+					<span class="dim">{p.since ?? '—'}</span>
+					<span class="sans">{p.hook}</span>
+				</a>
+			))
+		}
+	</div>
+	<ViewTabs current="list" />
+</BaseLayout>
+
+<style>
+	.crumb {
+		margin: 0 0 14px;
+		color: var(--tx);
+		font-size: 13px;
+	}
+	.crumb .p {
+		margin-right: 6px;
+		color: var(--ok);
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	.pl {
+		margin-bottom: 18px;
+		border-top: 1px solid var(--line);
+		font-size: 13px;
+	}
+	.plr {
+		display: grid;
+		grid-template-columns: 170px 110px 260px 80px 1fr;
+		gap: 14px;
+		align-items: center;
+		padding: 14px 8px;
+		border-bottom: 1px solid var(--line);
+		color: var(--tx);
+	}
+	a.plr:hover {
+		background: var(--hover);
+	}
+	.th {
+		color: var(--dim);
+		font-size: 12px;
+		letter-spacing: 0.06em;
+	}
+	.hi {
+		color: var(--hi);
+	}
+	.sans {
+		font: 14px var(--sans);
+	}
+	.led {
+		display: inline-block;
+		width: 8px;
+		height: 8px;
+		margin-right: 7px;
+		border-radius: 50%;
+		background: var(--ok);
+		box-shadow: 0 0 8px var(--ok);
+	}
+	.led.off {
+		background: var(--dot);
+		box-shadow: none;
+	}
+	@media (max-width: 720px) {
+		.plr {
+			grid-template-columns: 1fr 90px;
+		}
+		.plr > span:nth-child(n + 3) {
+			display: none;
+		}
+	}
+</style>

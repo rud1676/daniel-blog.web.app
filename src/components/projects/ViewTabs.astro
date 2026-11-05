@@ -1,0 +1,35 @@
+---
+/** 펼쳐보기(/projects) ↔ 모아보기(/projects/list). 두 정적 페이지를 오가는 링크 — JS 0. */
+interface Props {
+	current: 'slides' | 'list';
+}
+const { current } = Astro.props;
+---
+
+<nav class="tg mono" aria-label="보기 방식">
+	<a href="/projects" class:list={{ on: current === 'slides' }} aria-current={current === 'slides' ? 'page' : undefined}>펼쳐보기</a>
+	<a href="/projects/list" class:list={{ on: current === 'list' }} aria-current={current === 'list' ? 'page' : undefined}>모아보기</a>
+</nav>
+
+<style>
+	.tg {
+		display: flex;
+		width: max-content;
+		margin: 14px auto 0;
+		overflow: hidden;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		font-size: 12px;
+	}
+	a {
+		padding: 6px 14px;
+		color: var(--dim);
+	}
+	a:hover {
+		color: var(--hi);
+	}
+	a.on {
+		background: var(--chipon);
+		color: var(--hi);
+	}
+</style>

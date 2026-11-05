@@ -1,0 +1,162 @@
+---
+import type { Project } from '../../data/projects';
+import LayerRoute from '../LayerRoute.astro';
+
+/**
+ * 포스터 카드 (blog-design-2 B안): 레이어 색 그라데이션 + 큰 제목 + 한 줄.
+ * 터미널 톤은 아래 띠(Status · Layers · since)에만. 한 일 3줄·스택·링크는 <details>로 펼친다 — JS 0.
+ */
+interface Props {
+	project: Project;
+}
+
+const { project: p } = Astro.props;
+const external = p.link?.href.startsWith('http');
+---
+
+<article class="pb" id={p.slug} style={`--tint: var(--${p.tint})`} aria-labelledby={`${p.slug}-title`}>
+	<div class="pbv">
+		<span class="pbn mono">{p.slug}</span>
+		<h2 id={`${p.slug}-title`}>{p.title}</h2>
+		<p>{p.hook}</p>
+	</div>
+	<div class="pbs mono">
+		<span class="st"><span class:list={['led', { off: p.status !== 'Running' }]} aria-hidden="true"></span>{p.status}</span>
+		<LayerRoute layers={p.layers} />
+		<span class="since">since {p.since ?? '—'}</span>
+	</div>
+	<details class="did">
+		<summary class="mono"><span class="open">› 한 일 보기</span><span class="close">› 접기</span></summary>
+		<ul>{p.did.map((line) => <li>{line}</li>)}</ul>
+		<p class="stk mono">
+			{p.stack.join(' · ')}
+			{
+				p.link && (
+					<>
+						{' · '}
+						<a href={p.link.href} target={external ? '_blank' : undefined} rel={external ? 'noopener' : undefined}>
+							{p.link.label}
+							{external ? ' ↗' : ' →'}
+						</a>
+					</>
+				)
+			}
+		</p>
+	</details>
+</article>
+
+<style>
+	.pb {
+		overflow: hidden;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		background: var(--panel);
+	}
+	.pbv {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		min-height: 240px;
+		padding: 26px;
+		background: linear-gradient(140deg, color-mix(in srgb, var(--tint) 26%, var(--panel)), var(--panel) 70%);
+	}
+	.pbn {
+		color: var(--tint);
+		font-size: 13px;
+	}
+	h2 {
+		margin: 6px 0 8px;
+		color: var(--hi);
+		font-size: 30px;
+		line-height: 1.25;
+	}
+	.pbv p {
+		margin: 0;
+		color: var(--body);
+	}
+	.pbs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px 16px;
+		align-items: center;
+		padding: 12px 18px;
+		border-top: 1px solid var(--line);
+		background: var(--bg2);
+		color: var(--tx);
+		font-size: 12px;
+	}
+	.pbs :global(.ly) {
+		padding: 0 5px;
+		font-size: 11px;
+	}
+	.since {
+		color: var(--dim);
+	}
+	.led {
+		display: inline-block;
+		width: 8px;
+		height: 8px;
+		margin-right: 7px;
+		border-radius: 50%;
+		background: var(--ok);
+		box-shadow: 0 0 8px var(--ok);
+	}
+	.led.off {
+		background: var(--dot);
+		box-shadow: none;
+	}
+	.did {
+		border-top: 1px solid var(--line);
+		background: var(--bg2);
+	}
+	summary {
+		padding: 10px 18px;
+		color: var(--dim);
+		font-size: 12px;
+		cursor: pointer;
+		list-style: none;
+	}
+	summary::-webkit-details-marker {
+		display: none;
+	}
+	summary:hover,
+	summary:focus-visible {
+		color: var(--acc);
+	}
+	.close,
+	.did[open] .open {
+		display: none;
+	}
+	.did[open] .close {
+		display: inline;
+	}
+	ul {
+		margin: 0;
+		padding: 0 18px 0 36px;
+		color: var(--body);
+		font-size: 14px;
+		line-height: 1.7;
+	}
+	.stk {
+		margin: 10px 0 0;
+		padding: 0 18px 16px;
+		color: var(--dim);
+		font-size: 12px;
+	}
+	.stk a {
+		color: var(--front);
+	}
+	.stk a:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	@media (max-width: 720px) {
+		.pbv {
+			min-height: 200px;
+			padding: 20px;
+		}
+		h2 {
+			font-size: 24px;
+		}
+	}
+</style>
