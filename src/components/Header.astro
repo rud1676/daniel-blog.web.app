@@ -4,6 +4,9 @@
 const section = Astro.url.pathname.split('/')[1] ?? '';
 const nav = [
 	{ href: '/posts', label: 'posts', key: 'posts' },
+	{ href: '/cli', label: 'cli', key: 'cli' },
+	// projects는 임시로 메뉴에서 뺐다(2026-11-05). 페이지(/projects, /projects/list)는 그대로 있다.
+	// { href: '/projects', label: 'projects', key: 'projects' },
 	{ href: '/about', label: 'about', key: 'about' },
 ];
 ---
