@@ -32,3 +32,6 @@ pnpm-debug.log*
 crash.log
 *.tfvars
 !*.tfvars.example
+
+# firebase-tools 배포 캐시
+.firebase/
