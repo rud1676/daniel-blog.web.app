@@ -1,0 +1,115 @@
+# live 배포 — `live-*` 태그를 push할 때만 나간다. main push로는 배포되지 않는다.
+#   git tag live-2026-11-05 && git push origin live-2026-11-05   (같은 날 두 번째는 live-2026-11-05.2)
+# 매일 06:00(KST) cron은 "가장 최근 live-* 태그"를 다시 빌드한다 — 글 표 AGE 갱신용. 태그 안 한 main 커밋은 안 나간다.
+# 수동 재배포: Actions → deploy → Run workflow (태그 이름, 비우면 최근 태그).
+#
+# 필요한 저장소 설정 (Settings → Secrets and variables → Actions):
+#   변수 GCP_WIF_PROVIDER · GCP_DEPLOYER  ← terraform -chdir=infra/main output (wif_provider · deployer_email)
+#   시크릿 DENY_WORDS                     ← 홈 git log에 나가면 안 되는 단어, 쉼표로 구분 (레포에 적지 않는다)
+name: deploy
+
+on:
+  push:
+    tags: ['live-*']
+  schedule:
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '배포할 live-* 태그 (비우면 가장 최근 태그)'
+        required: false
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TZ: Asia/Seoul
+  SITE_URL: https://kyungjin.dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 홈 git log가 전체 기록을 읽는다 (shallow면 빌드가 실패한다)
+
+      - name: 배포할 태그 정하기
+        id: target
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            TAG="$GITHUB_REF_NAME"
+          elif [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
+          else
+            TAG="$(git tag -l 'live-*' --sort=-creatordate | head -n1)"
+          fi
+          if [ -z "$TAG" ]; then
+            echo "live-* 태그가 아직 없다 — 배포하지 않고 끝낸다."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          case "$TAG" in live-*) ;; *) echo "::error::live-* 태그만 배포한다: $TAG"; exit 1 ;; esac
+          git checkout --quiet --detach "refs/tags/$TAG"
+          # main 위에 있는 커밋만 배포한다 (feat 브랜치에 잘못 찍은 태그 막기)
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::$TAG 가 가리키는 커밋이 main에 없다."
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "배포 대상: $TAG ($(git rev-parse --short HEAD))"
+
+      - uses: actions/setup-node@v4
+        if: steps.target.outputs.skip != 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: 빌드
+        if: steps.target.outputs.skip != 'true'
+        env:
+          GITLOG_LIVE: '1'
+          GITLOG_TAG: ${{ steps.target.outputs.tag }}
+          DENY_WORDS: ${{ secrets.DENY_WORDS }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: JS 예산 검사 (글 상세 ≤ 10kB, JS 0 페이지)
+        if: steps.target.outputs.skip != 'true'
+        run: npm run check:js
+
+      - uses: google-github-actions/auth@v2
+        if: steps.target.outputs.skip != 'true'
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER }}
+
+      - name: Firebase Hosting 배포
+        if: steps.target.outputs.skip != 'true'
+        env:
+          TAG: ${{ steps.target.outputs.tag }}
+        run: npx --yes firebase-tools deploy --only hosting:blog --non-interactive --message "$TAG"
+
+      - name: 배포 확인 (홈의 tag live == 태그 커밋)
+        if: steps.target.outputs.skip != 'true'
+        env:
+          SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          for i in 1 2 3 4 5; do
+            LIVE="$(curl -fsS "$SITE_URL/" | grep -o 'data-live-sha="[0-9a-f]*"' | head -n1 | cut -d'"' -f2 || true)"
+            if [ "$LIVE" = "$SHA" ]; then echo "live = $SHA"; exit 0; fi
+            echo "아직 반영 전 (live=${LIVE:-없음}), 10초 뒤 다시 ($i/5)"
+            sleep 10
+          done
+          echo "::error::$SITE_URL 의 tag live 커밋이 $SHA 가 아니다."
+          exit 1

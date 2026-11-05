@@ -7,7 +7,7 @@
 | 디렉터리 | 만드는 것 | state |
 |---|---|---|
 | `bootstrap/` | GCP 프로젝트 · 결제 계정 연결 · state 버킷 · 월 예산 알림 | 처음엔 로컬 → 버킷 생성 후 GCS(`prefix=bootstrap`)로 이전 |
-| `main/` | Firebase 프로젝트 · Hosting 사이트(`daniel-blog`) · 커스텀 도메인 `kyungjin.dev`(`domain.tf`) — 다음: Workload Identity Federation · 배포 서비스 계정 | GCS(`prefix=main`) |
+| `main/` | Firebase 프로젝트 · Hosting 사이트(`daniel-blog`) · 커스텀 도메인 `kyungjin.dev`(`domain.tf`) · GitHub Actions 배포 권한(`ci.tf`) | GCS(`prefix=main`) |
 
 ## 규칙
 
@@ -29,7 +29,7 @@ terraform apply bootstrap.tfplan               # 승인 후
 terraform init -migrate-state
 ```
 
-## 첫 배포 (CI 전, 로컬에서)
+## 첫 배포 (CI 전, 로컬에서 — 지금은 쓰지 않는다)
 
 ```bash
 cd infra/main
@@ -51,3 +51,18 @@ DNS는 Cloudflare에 있다. Terraform은 Firebase 쪽 연결만 만든다.
 3. `terraform output custom_domain_dns_updates` 의 `desired` 레코드를 Cloudflare DNS에 **DNS only(회색 구름)** 로 추가
 4. `terraform output custom_domain_states` 가 `OWNERSHIP_ACTIVE` · `HOST_ACTIVE` 가 될 때까지 기다린다 (인증서까지 최대 24시간)
 
+## GitHub Actions 배포 (`ci.tf`)
+
+서비스 계정 키를 만들지 않고 Workload Identity Federation으로 GitHub OIDC 토큰을 GCP 자격으로 바꾼다.
+
+| 리소스 | 내용 |
+|---|---|
+| WIF pool `github` · provider `github-oidc` | 이 저장소(repository_id 고정)의 `refs/tags/live-*`(배포) · `refs/heads/main`(cron·수동 재배포) 토큰만 받는다 |
+| 서비스 계정 `blog-deployer` | `roles/firebasehosting.admin` · `roles/serviceusage.serviceUsageConsumer` |
+| `roles/iam.workloadIdentityUser` | 위 저장소 principalSet → `blog-deployer` |
+
+1. `terraform -chdir=infra/main plan -out=ci.tfplan` → 사람이 읽고 승인 → `terraform -chdir=infra/main apply ci.tfplan`
+2. GitHub 저장소 Settings → Secrets and variables → Actions
+   - 변수 `GCP_WIF_PROVIDER` = `terraform output -raw wif_provider`, `GCP_DEPLOYER` = `terraform output -raw deployer_email`
+   - 시크릿 `DENY_WORDS` = 홈 git log에 나가면 안 되는 단어(쉼표 구분). 레포·로그에 적지 않는다
+3. `deploy.yml`이 들어간 main 커밋에 `live-*` 태그를 push → Actions에서 배포·확인 단계까지 초록인지 본다

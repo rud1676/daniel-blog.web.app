@@ -92,26 +92,30 @@ island를 하나 추가할 때마다 다시 잰다. `client:load`를 습관적�
 
 - GCP 리소스는 콘솔이 아니라 [`infra/`](./infra/README.md)의 Terraform으로 만든다. `apply`는 사람이 `plan`을 읽고 승인한 뒤에만.
   - `infra/bootstrap/` — GCP 프로젝트 `daniel-blog-1676` · state 버킷 · 월 예산 알림
-  - `infra/main/` — Firebase 프로젝트 · Hosting 사이트 `daniel-blog` · 커스텀 도메인 `kyungjin.dev`
+  - `infra/main/` — Firebase 프로젝트 · Hosting 사이트 `daniel-blog` · 커스텀 도메인 `kyungjin.dev` · GitHub Actions 배포 권한(WIF, `ci.tf`)
 - 사이트 응답 헤더·캐시·리다이렉트는 `firebase.json`, 배포 대상은 `.firebaserc`.
-- 지금은 로컬에서 배포한다 (GitHub Actions + WIF는 다음 단계):
+- **live 배포는 `live-*` 태그 push로만 한다** ([`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)). main에 머지해도 배포되지 않는다:
   ```bash
-  npm run build
-  npx firebase deploy --only hosting:blog   # → https://kyungjin.dev (Firebase 기본 주소 daniel-blog.web.app 도 같은 사이트)
+  git switch main && git pull
+  git tag live-2026-11-05             # 같은 날 두 번째는 live-2026-11-05.2
+  git push origin live-2026-11-05     # → 빌드 → JS 예산 검사 → 배포 → 홈의 tag: live 커밋 확인
   ```
+  - 태그는 main 위의 커밋에만 찍는다(아니면 워크플로가 실패한다). 매일 06:00(KST)에 가장 최근 태그를 다시 빌드한다(글 표 AGE 갱신).
+  - 로컬 `firebase deploy`는 하지 않는다. 했다면 다음 태그 배포가 덮어쓴다.
+- 홈 첫 화면은 이 저장소의 `git log`다 — 커밋 제목 규칙은 [`AGENTS.md`](./AGENTS.md#커밋-메시지-규칙).
 - 방문 분석은 Firebase Hosting 요청 로그 → Cloud Logging → BigQuery로 한다(JS 0, 예정). 분석 스크립트는 붙이지 않는다
 - 배포 당일 Search Console에 `sitemap-index.xml` 제출 — 색인 데이터는 소급되지 않는다
 
 ## 남은 일
 
 - [x] 공개 도메인 `kyungjin.dev`로 결정
-- [ ] 도메인 연결 — 코드(`site`·`robots.txt`·`infra/main/domain.tf`)는 준비됨. 구매·apply·DNS 등록이 남음
-- [ ] `/about` 실명·소속 공개 수위 확정, `RESUME_URL` 채우기
+- [x] 도메인 연결 — `kyungjin.dev` live
+- [x] `/about` — 이름 Daniel, 경력 타임라인은 두지 않는다
 - [x] `infra/bootstrap` apply — GCP 프로젝트 · state 버킷(GCS) · 예산 알림
 - [x] `infra/main` apply → 첫 배포 (`daniel-blog.web.app`)
-- [ ] GitHub Actions 배포 (Workload Identity Federation · 배포 서비스 계정)
-- [ ] 커스텀 도메인 연결 + HTTPS (Cloudflare DNS에 TXT·A 레코드, DNS only)
+- [ ] GitHub Actions 배포 — 코드(`infra/main/ci.tf`·`deploy.yml`) 준비됨. `ci.tf` apply · 저장소 변수/시크릿 등록 · 첫 `live-*` 태그가 남음
+- [x] 커스텀 도메인 연결 + HTTPS (Cloudflare DNS에 TXT·A 레코드, DNS only)
 - [ ] Search Console 등록 + 사이트맵 제출
-- [ ] 초고(`draft: true`) 완성 — 지금 발행 글 0편
+- [ ] 초고(`draft: true`) 완성
 - [ ] 성능 예산 실측 기록
 
