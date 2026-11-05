@@ -66,3 +66,27 @@ DNS는 Cloudflare에 있다. Terraform은 Firebase 쪽 연결만 만든다.
    - 변수 `GCP_WIF_PROVIDER` = `terraform output -raw wif_provider`, `GCP_DEPLOYER` = `terraform output -raw deployer_email`
    - 시크릿 `DENY_WORDS` = 홈 git log에 나가면 안 되는 단어(쉼표 구분). 레포·로그에 적지 않는다
 3. `deploy.yml`이 들어간 main 커밋에 `live-*` 태그를 push → Actions에서 배포·확인 단계까지 초록인지 본다
+
+## 방문 분석 (`analytics.tf`)
+
+페이지에 스크립트를 넣지 않고 Hosting 요청 로그를 BigQuery로 모은다(JS 0). 정적 자산(`/_astro/**`)·favicon 요청은 싱크 필터로 뺀다.
+
+| 리소스 | 내용 |
+|---|---|
+| `google_bigquery_dataset.hosting_logs` | US, 파티션 400일 뒤 삭제(저장량 상한) |
+| `google_logging_project_sink.hosting_to_bq` | `firebase_domain` · `webrequests` 로그 → 위 데이터셋(파티션 테이블) |
+| `google_bigquery_dataset_iam_member.sink_writer` | 싱크 writer identity에 `roles/bigquery.dataEditor` |
+
+비용: Logging 수집 월 50GiB·싱크 라우팅·BigQuery 저장 10GiB·조회 1TiB는 무료 한도 안. **BigQuery 스트리밍 적재만 200MB당 $0.01**(월 수 원~수십 원) — 월 예산 알림 1,000원 안.
+
+1. `plan` → 사람 승인 → `apply`
+2. **수동 1회**: Firebase 콘솔 → 프로젝트 설정 → 연동 → **Cloud Logging** → Link → 사이트 `daniel-blog` (Terraform 리소스 없음). 연결 후 30분 안에 로그가 쌓이기 시작한다
+3. 확인 쿼리:
+
+```sql
+SELECT DATE(timestamp) AS day, httpRequest.requestUrl AS url, COUNT(*) AS views
+FROM `daniel-blog-1676.hosting_logs.webrequests`
+WHERE httpRequest.status = 200 AND NOT REGEXP_CONTAINS(httpRequest.userAgent, r'(?i)bot|crawler|spider')
+GROUP BY day, url ORDER BY day DESC, views DESC
+```
+
