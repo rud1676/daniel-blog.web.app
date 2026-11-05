@@ -6,18 +6,27 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getGitLog } from '../lib/gitlog';
 import { getHomePosts, getPublishedPosts } from '../lib/posts';
 
-// 홈은 "누구인가" + 이 사이트의 git log(히어로) + 글 몇 편(대표 + 최신). 전체 목록은 /posts.
+// 홈은 "누구인가" + 이 사이트의 git log(히어로) + 대표 글(수동 pinned) + 최근 글 4편. 전체 목록은 /posts.
 const posts = await getPublishedPosts();
-const homePosts = getHomePosts(posts);
+const { pinned, latest } = getHomePosts(posts);
 const log = await getGitLog();
 ---
 
 <BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
 	<Hero log={log} />
 
-	<section aria-labelledby="home-posts">
-		<h2 id="home-posts" class="sec">대표 글 · 최근 글</h2>
-		<PostTable posts={homePosts} />
+	{
+		pinned.length > 0 && (
+			<section aria-labelledby="home-pinned" class="block">
+				<h2 id="home-pinned" class="sec">대표 글</h2>
+				<PostTable posts={pinned} />
+			</section>
+		)
+	}
+
+	<section aria-labelledby="home-latest" class="block">
+		<h2 id="home-latest" class="sec">최근 글</h2>
+		<PostTable posts={latest} headless={pinned.length > 0} />
 		{
 			posts.length > 0 && (
 				<p class="more">
@@ -29,6 +38,9 @@ const log = await getGitLog();
 </BaseLayout>
 
 <style>
+	.block + .block {
+		margin-top: 40px;
+	}
 	.sec {
 		margin: 0 0 12px;
 		color: var(--hi);

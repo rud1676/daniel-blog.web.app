@@ -6,8 +6,8 @@ export type Post = CollectionEntry<'posts'>;
 
 /** 홈 대표 글 상한. 넘으면 빌드를 막는다. */
 const MAX_PINNED = 2;
-/** 홈 표에 보이는 글 수 (대표 + 최신) */
-const HOME_POSTS_COUNT = 3;
+/** 홈 "최근 글" 섹션에 보이는 글 수 */
+const HOME_LATEST_COUNT = 4;
 
 /**
  * 발행된 글만 최신순으로. draft는 어디에서도 노출되지 않는다.
@@ -25,14 +25,14 @@ export async function getPublishedPosts(): Promise<Post[]> {
 }
 
 /**
- * 홈 표: 대표 글(최대 2) + 대표가 아닌 최신 글로 총 3편. 최신 글은 최소 1편 들어간다
- * — 대표만 있으면 갱신을 잊었을 때 "멈춘 블로그"로 보인다.
+ * 홈은 두 섹션: 대표 글(pinned, 수동 선정 최대 2) / 최근 글(대표 제외 최신 4).
+ * 대표 글을 최근 글에서 빼는 건 같은 글이 홈에 두 번 보이지 않게 하려고.
  */
-export function getHomePosts(posts: Post[]): Post[] {
-	const pinned = posts.filter((post) => post.data.pinned);
-	const latest = posts.filter((post) => !post.data.pinned);
-	const latestCount = Math.max(1, HOME_POSTS_COUNT - pinned.length);
-	return [...pinned, ...latest.slice(0, latestCount)];
+export function getHomePosts(posts: Post[]): { pinned: Post[]; latest: Post[] } {
+	return {
+		pinned: posts.filter((post) => post.data.pinned),
+		latest: posts.filter((post) => !post.data.pinned).slice(0, HOME_LATEST_COUNT),
+	};
 }
 
 /** 레이어 → 글 수. 글이 0편인 레이어는 빠진다 (빈 필터 페이지를 만들지 않는다). LAYERS 순서를 따른다. */
