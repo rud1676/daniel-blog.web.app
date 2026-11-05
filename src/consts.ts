@@ -6,9 +6,8 @@ export const SITE_DESCRIPTION =
 
 export const AUTHOR = 'Daniel';
 export const GITHUB_URL = 'https://github.com/rud1676';
-
-/** /about 에서 가리킬 이력서 링크. 준비되면 채운다. */
-export const RESUME_URL = '';
+/** 이 블로그 저장소 (public). 홈 git log의 커밋 링크가 여기를 가리킨다. */
+export const REPO_URL = 'https://github.com/rud1676/daniel-blog.web.app';
 
 /** 홈에서 보여줄 최근 글 수 */
 export const RECENT_POSTS_COUNT = 5;
