@@ -19,6 +19,23 @@
 - **live 배포는 `live-*` 태그 push로만 한다** (`.github/workflows/deploy.yml`). main push로는 배포되지 않고, 로컬 `firebase deploy`도 하지 않는다. 태그는 main 위의 커밋에만 찍는다.
 - 공개 도메인은 `kyungjin.dev`다. `astro.config.mjs`의 `site`, `public/robots.txt`, `infra/main/domain.tf`가 함께 움직인다. `daniel-blog.web.app`은 Firebase 기본 주소일 뿐 공개 주소로 쓰지 않는다.
 
+## 분류 규칙 — 레이어 · 카테고리
+
+글은 두 축으로 나눈다. **목록은 각각 한 파일에만 두고, 나머지는 전부 거기서 만든다.** 값을 더할 때 손댈 곳이 정해져 있어야 사이트와 `/cli`가 같이 따라온다.
+
+| | 레이어 | 카테고리 |
+|---|---|---|
+| 뜻 | 글의 문제가 지나간 기술 영역 | 글이 어디서 출발했나 |
+| 글당 | 1~4개 (`layers`) | 정확히 1개 (`category`, draft도 필수) |
+| 목록 | `src/lib/layers.ts` `LAYERS` | `src/lib/categories.ts` `CATEGORIES` |
+| 하나 더할 때 | 배열에 추가 + `src/styles/tokens.css`에 `--<레이어>` 색 3곳(다크·라이트·OS 라이트) | 배열에 `{ id, description }` 한 줄 |
+
+- 카테고리 판정: 글이 구체적인 사건에서 출발하면 그 사건이 일어난 곳(`work`/`side`), 사건 없이 생각에서 출발하면 `thinking`. `work` 글은 위의 "일반화한 경험담" 규칙을 따른다.
+- 화면 코드에 id를 다시 쓰지 않는다 — `x === 'infra'`, `case 'work':`, `['front', 'server']` 같은 코드 대신 목록에서 가져온다. 예외는 홈 히어로 장식용 `heroLayers`(`Hero.astro`)뿐이다. `npm run check:taxonomy`가 배포 전에 검사한다.
+- 글이 0편인 레이어·카테고리는 칩·탭·페이지를 만들지 않는다(빈 주소는 404).
+- 글 주소에 카테고리를 넣지 않는다. 글은 계속 `/posts/<slug>`, 목록만 `/posts/category/<id>`·`/posts/layer/<id>`다. 그래서 이름을 바꾸거나 글을 옮겨도 링크가 깨지지 않는다.
+- 이름을 바꾸거나 뺄 땐 목록과 그 값을 쓰는 글 frontmatter를 한 커밋에서 같이 고친다. 빌드(스키마)가 남은 글을 잡는다.
+
 ## 커밋 메시지 규칙
 
 홈 첫 화면이 이 저장소의 `git log`다. **커밋 제목이 그대로 방문자에게 보인다.** 그래서 제목은 개발 용어가 아니라 "독자가 읽을 한 줄"로 쓴다.

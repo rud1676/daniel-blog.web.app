@@ -88,6 +88,10 @@ jobs:
         if: steps.target.outputs.skip != 'true'
         run: npm run check:js
 
+      - name: 분류 목록 검사 (레이어·카테고리 하드코딩, 색 토큰)
+        if: steps.target.outputs.skip != 'true'
+        run: npm run check:taxonomy
+
       - uses: google-github-actions/auth@v3
         if: steps.target.outputs.skip != 'true'
         with:

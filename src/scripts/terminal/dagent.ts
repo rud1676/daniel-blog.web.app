@@ -33,7 +33,7 @@ export async function runDagent(shell: Shell, post?: string) {
 	term.led.classList.remove('down');
 
 	const history: Msg[] = [];
-	shell.setPrompt('ai');
+	shell.setPrompt('agent');
 	term.print(span('hi', 'dagent'), span('dim', ` v${version || '0.1'} · scope: ${post ? `글 ${post}` : '글 · 이력서 · 프로젝트 기록'}`));
 	term.print('제 글·이력서·프로젝트 기록으로 답하는 ', span('hi', 'AI 버전의 Daniel'), '이에요. 틀릴 수 있으니 중요한 건 원문 링크로 확인해 주세요.');
 	term.print(span('dim', '추천 질문 — '), ...chips(SUGGESTED));

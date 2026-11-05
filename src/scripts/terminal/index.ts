@@ -19,7 +19,7 @@ type GitLine = { short: string; date: string; kind: string; text: string; href: 
 export type Shell = {
 	term: Term;
 	agentUrl: string;
-	setPrompt: (mode: 'sh' | 'ai') => void;
+	setPrompt: (mode: 'sh' | 'agent') => void;
 	/** dagent 모드일 때 입력을 가로챈다. null이면 셸 */
 	handler: ((line: string) => void | Promise<void>) | null;
 	/** 진행 중인 dagent 요청 취소 (Esc) */
@@ -42,11 +42,11 @@ function start(root: HTMLElement) {
 		handler: null,
 		abort: null,
 		setPrompt(mode) {
-			term.prompt.textContent = mode === 'ai' ? 'dagent ›' : '$';
-			term.prompt.classList.toggle('ai', mode === 'ai');
-			term.input.placeholder = mode === 'ai' ? '궁금한 걸 물어보세요' : 'help';
+			term.prompt.textContent = mode === 'agent' ? 'dagent ›' : '$';
+			term.prompt.classList.toggle('ai', mode === 'agent');
+			term.input.placeholder = mode === 'agent' ? '궁금한 걸 물어보세요' : 'help';
 			term.mode.replaceChildren(
-				...(mode === 'ai' ? [' ', span('badge', 'AI'), ' dagent 실행 중 · /exit로 나가기'] : [' sh · help로 명령어 보기']),
+				...(mode === 'agent' ? [' ', span('badge', 'AI'), ' dagent 실행 중 · /exit로 나가기'] : [' sh · help로 명령어 보기']),
 			);
 		},
 	};

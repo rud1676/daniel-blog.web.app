@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check:js": "node scripts/check-js-budget.mjs"
+    "check:js": "node scripts/check-js-budget.mjs",
+    "check:taxonomy": "node scripts/check-taxonomy.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",
