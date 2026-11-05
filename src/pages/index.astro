@@ -3,17 +3,17 @@ import Hero from '../components/Hero.astro';
 import PostTable from '../components/PostTable.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getEvents } from '../lib/events';
+import { getGitLog } from '../lib/gitlog';
 import { getHomePosts, getPublishedPosts } from '../lib/posts';
 
-// 홈은 "누구인가"(히어로) + 글 몇 편(대표 + 최신). 전체 목록은 /posts.
+// 홈은 "누구인가" + 이 사이트의 git log(히어로) + 글 몇 편(대표 + 최신). 전체 목록은 /posts.
 const posts = await getPublishedPosts();
 const homePosts = getHomePosts(posts);
-const events = getEvents(posts);
+const log = await getGitLog();
 ---
 
 <BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
-	<Hero events={events} />
+	<Hero log={log} />
 
 	<section aria-labelledby="home-posts">
 		<h2 id="home-posts" class="sec">대표 글 · 최근 글</h2>

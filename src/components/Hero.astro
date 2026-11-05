@@ -1,45 +1,85 @@
 ---
-import type { EventRow } from '../lib/events';
+import { REPO_URL } from '../consts';
+import type { GitLog } from '../lib/gitlog';
 import type { Layer } from '../lib/layers';
 
 /**
- * 홈 히어로: `$ trace developer/daniel` 출력. 포지셔닝을 문구가 아니라 형식으로 말한다.
- * 터미널 창 모양은 여기(히어로)에만 쓴다 — 글을 창에 가두지 않는다. CSS만, JS 0.
+ * 홈 히어로 (blog-design-2 A안): oh-my-zsh 터미널에서 친 `whoami` + `git log --oneline`.
+ * git log는 이 레포의 실제 기록 — 빌드 때 src/lib/gitlog.ts 가 만든다. CSS만, JS 0.
+ * PC 8줄, 모바일(≤720px) 6줄.
  */
 interface Props {
-	events: EventRow[];
+	log: GitLog;
 }
 
-const { events } = Astro.props;
-
-/** 이 사람이 넘나드는 영역 — 글 레이어 7개 중 포지셔닝에 쓰는 5개 */
+const { log } = Astro.props;
+const SHOW = 8;
+const lines = log.lines.slice(0, SHOW);
 const heroLayers: Layer[] = ['front', 'server', 'infra', 'db', 'ai'];
-const pad = (s: string, n: number) => s.padEnd(n, ' ');
+const kindClass = { post: 'p', fix: 'f', site: 's', infra: 'i' } as const;
 ---
 
-<section class="term" aria-label="소개">
-	<div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>~ — zsh</span></div>
-	<pre><span class="p">$</span> trace developer/daniel
-<b>Name:</b>       Daniel
-<b>Role:</b>       인프라를 주로 다루는, 레이어를 넘나드는 개발자
-<b>Layers:</b>     {heroLayers.map((layer, i) => <>{i > 0 && ' ▸ '}<span style={`color: var(--${layer})`}>{layer}</span></>)}
-<b>Approach:</b>   문제를 따라 레이어를 넘는다.
-            고른 것보다 버린 것과 그 이유를 남긴다.
-<b>Events:</b>{events.length === 0 ? <span class="dim">     &lt;none&gt;</span> : <>
-  <span class="dim">{pad('Type', 9)}{pad('Reason', 11)}{pad('Age', 6)}Message</span>{events.map((e) => <>
-  <span class={e.type === 'Warning' ? 'w' : 'p'}>{pad(e.type, 9)}</span>{pad(e.reason, 11)}{pad(e.age, 6)}{e.href ? <a href={e.href}>{e.message}</a> : e.message}</>)}</>}
-<span class="p">$</span> <span class="cur" aria-hidden="true">▌</span></pre>
+<section class="z" aria-label="소개">
+	<div class="zb" aria-hidden="true"><i></i><i></i><i></i><span>daniel-blog — zsh</span><span class="zr">oh-my-zsh · robbyrussell</span></div>
+	<div class="body">
+		<p><span class="arw">➜</span> <span class="cwd">~</span> whoami</p>
+		<p><b class="nm">Daniel</b> — 인프라를 주로 다루는, 레이어를 넘나드는 개발자</p>
+		<p class="dim ind">
+			{heroLayers.map((layer, i) => <>{i > 0 && ' ▸ '}<span style={`color: var(--${layer})`}>{layer}</span></>)} · 고른 것보다 버린 것과 그 이유를 남긴다
+		</p>
+		{
+			lines.length > 0 && (
+				<>
+					<p class="gap">
+						<span class="arw">➜</span> <span class="cwd">daniel-blog</span> <span class="gb">git:(<span class="br">{log.branch}</span>)</span> git log --oneline --date=short -{SHOW}
+					</p>
+					<ol class="gl" data-live-sha={lines[0].refs?.live ? log.headSha : undefined} data-live-tag={log.liveTag ?? undefined}>
+						{lines.map((l) => (
+							<li>
+								<span class="g" aria-hidden="true">*</span> <span class="hs">{l.short}</span> <time class="dt" datetime={l.date}>{l.date}</time>{' '}
+								{l.refs && (
+									<>
+										<span class="rf">
+											(<span class="hd">{l.refs.head}</span>
+											{l.refs.live && (
+												<>
+													, <span class="tgl">tag: live</span>
+												</>
+											)}
+											)
+										</span>{' '}
+									</>
+								)}
+								<span class:list={['ty', kindClass[l.kind]]}>{l.kind}</span>{' '}
+								{l.href.startsWith('/') ? (
+									<a href={l.href} class="post">{l.text}</a>
+								) : (
+									<a href={l.href} class="cm" target="_blank" rel="noopener">{l.text}</a>
+								)}
+							</li>
+						))}
+					</ol>
+					<p class="dim ind">
+						… <a href={`${REPO_URL}/commits/main`} class="more" target="_blank" rel="noopener">git log --all 전체 보기 →</a>
+					</p>
+				</>
+			)
+		}
+		<p class="gap">
+			<span class="arw">➜</span> <span class="cwd">daniel-blog</span> <span class="gb">git:(<span class="br">{log.branch}</span>)</span> <span class="cur" aria-hidden="true">▌</span>
+		</p>
+	</div>
 </section>
 
 <style>
-	.term {
+	.z {
 		margin: 0 0 28px;
 		overflow: hidden;
 		border: 1px solid var(--line);
 		border-radius: 8px;
 		background: var(--panel);
 	}
-	.bar {
+	.zb {
 		display: flex;
 		align-items: center;
 		gap: 6px;
@@ -49,39 +89,100 @@ const pad = (s: string, n: number) => s.padEnd(n, ' ');
 		color: var(--dim);
 		font: 12px var(--mono);
 	}
-	.bar i {
+	.zb i {
 		width: 10px;
 		height: 10px;
 		border-radius: 50%;
 		background: var(--dot);
 	}
-	.bar span {
+	.zb span {
 		margin-left: 10px;
 	}
-	pre {
-		margin: 0;
+	.zb .zr {
+		margin-left: auto;
+	}
+	.body {
 		padding: 20px 22px;
 		color: var(--tx);
 		font: 14px/1.75 var(--mono);
-		white-space: pre-wrap;
 	}
-	pre b {
-		color: var(--acc);
-		font-weight: 400;
+	p,
+	ol {
+		margin: 0;
 	}
-	.p {
+	ol {
+		padding: 0;
+		list-style: none;
+	}
+	li {
+		padding-left: 2ch;
+		text-indent: -2ch; /* 줄바꿈되면 * 다음부터 들여쓰기 */
+	}
+	.gap {
+		margin-top: 1.75em;
+	}
+	.ind {
+		padding-left: 2ch;
+	}
+	.arw {
 		color: var(--ok);
 	}
-	.w {
+	.cwd,
+	.hd,
+	.cur {
+		color: var(--acc);
+	}
+	.gb {
+		color: var(--front);
+	}
+	.br,
+	.g {
+		color: var(--ai);
+	}
+	.nm {
+		color: var(--hi);
+	}
+	.hs,
+	.rf {
+		color: var(--tooling);
+	}
+	.dt {
+		color: var(--dim);
+	}
+	.tgl {
+		color: var(--server);
+	}
+	.ty {
+		display: inline-block;
+		min-width: 3.6em;
+		font-size: 12px;
+		text-indent: 0;
+	}
+	.ty.p {
+		color: var(--server);
+	}
+	.ty.f {
 		color: var(--warn);
 	}
-	pre a:hover {
+	.ty.s {
+		color: var(--front);
+	}
+	.ty.i {
+		color: var(--infra);
+	}
+	a.post,
+	.more {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	a:hover {
 		color: var(--hi);
+	}
+	a.cm:hover {
 		text-decoration: underline;
 		text-underline-offset: 3px;
 	}
 	.cur {
-		color: var(--acc);
 		animation: blink 1s steps(2) infinite;
 	}
 	@keyframes blink {
@@ -95,13 +196,20 @@ const pad = (s: string, n: number) => s.padEnd(n, ' ');
 		}
 	}
 	@media (max-width: 720px) {
-		.term {
+		.z {
 			margin: 0 0 20px;
 		}
-		pre {
+		.zr {
+			display: none;
+		}
+		.body {
 			padding: 14px;
 			font-size: 12px;
 			line-height: 1.7;
+		}
+		/* 모바일은 6줄 */
+		li:nth-child(n + 7) {
+			display: none;
 		}
 	}
 </style>
