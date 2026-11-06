@@ -14,7 +14,7 @@ import LayerRoute from '../components/LayerRoute.astro';
 import PostTable from '../components/PostTable.astro';
 import { categoryOf } from '../lib/categories';
 import type { Post } from '../lib/posts';
-import { formatUpdated, formatViews, getViews } from '../lib/views';
+import { formatViews, getViews } from '../lib/views';
 
 interface Props {
 	post: Post;
@@ -80,9 +80,7 @@ const viewCount = views.counts[post.id];
 							<div>
 								<b>VIEWS</b>
 								{viewCount ? (
-									<>
-										{formatViews(viewCount)} <span class="vu">(updated {formatUpdated(views.updatedAt)})</span>
-									</>
+									formatViews(viewCount)
 								) : (
 									<span class="vu">— 집계 전 (다음 06:00 빌드부터)</span>
 								)}

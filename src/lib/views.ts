@@ -82,9 +82,3 @@ export function getViews(): Promise<Views> {
 
 /** 1284 → "1,284" */
 export const formatViews = (n: number) => n.toLocaleString('en-US');
-
-/** ISO → "2026-11-06 06:00 KST" */
-export function formatUpdated(iso: string): string {
-	const d = new Date(new Date(iso).getTime() + 9 * 3600_000);
-	return `${d.toISOString().slice(0, 10)} ${d.toISOString().slice(11, 16)} KST`;
-}
