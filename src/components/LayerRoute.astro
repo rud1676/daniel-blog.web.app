@@ -1,7 +1,7 @@
 ---
 import type { Layer } from '../lib/layers';
 
-/** 레이어 칩 + 화살표. 순서 = 문제가 지나간 흐름. 칩 색은 tokens.css의 --<레이어>. */
+/** 레이어 칩, 쉼표로 나열 (2026-11-06 화살표 → 쉼표: 순서에 뜻을 싣지 않는다). 칩 색은 tokens.css의 --<레이어>. */
 interface Props {
 	layers: readonly Layer[];
 }
@@ -15,7 +15,7 @@ const { layers } = Astro.props;
 			<>
 				{i > 0 && (
 					<span class="arr" aria-hidden="true">
-						→
+						,
 					</span>
 				)}
 				<span class="ly" style={`color: var(--${layer})`}>
@@ -42,7 +42,7 @@ const { layers } = Astro.props;
 		white-space: nowrap;
 	}
 	.arr {
-		margin: 0 3px;
+		margin: 0 5px 0 1px;
 		color: var(--dim);
 		font: 12px var(--mono);
 	}

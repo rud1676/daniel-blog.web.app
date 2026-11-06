@@ -1,7 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { CATEGORY_IDS } from './lib/categories';
+import { CATEGORY_IDS, categoryOf } from './lib/categories';
 import { LAYERS } from './lib/layers';
 
 // frontmatter 오타는 런타임이 아니라 빌드 전에 잡는다.
@@ -33,8 +33,12 @@ const posts = defineCollection({
 				heroImage: z.optional(image()),
 			})
 			.superRefine((data, ctx) => {
-				if (!data.draft && !data.layers) {
+				const { layered } = categoryOf(data.category);
+				if (layered && !data.draft && !data.layers) {
 					ctx.addIssue({ code: 'custom', path: ['layers'], message: '발행 글에는 layers가 필요하다' });
+				}
+				if (!layered && data.layers) {
+					ctx.addIssue({ code: 'custom', path: ['layers'], message: `${data.category} 글에는 layers를 두지 않는다` });
 				}
 				if (data.layers && new Set(data.layers).size !== data.layers.length) {
 					ctx.addIssue({ code: 'custom', path: ['layers'], message: 'layers에 같은 레이어가 두 번 있다' });

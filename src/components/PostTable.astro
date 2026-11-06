@@ -1,12 +1,12 @@
 ---
-import { formatAge } from '../lib/age';
+import { formatPubDate } from '../lib/age';
 import type { Post } from '../lib/posts';
 import LayerRoute from './LayerRoute.astro';
 
 /**
- * 글 표: NAME / LAYERS / STANCE / AGE. 행 전체가 글 링크다.
+ * 글 표: NAME / CATEGORY / LAYERS / STANCE / DATE. 행 전체가 글 링크다.
  * 홈·/posts·레이어 필터·글 끝 "같은 레이어 글"이 같이 쓴다. JS 0.
- * 720px 이하에선 카드형(제목·AGE / 레이어 / 관점)으로 다시 배치한다.
+ * 720px 이하에선 카드형(제목·DATE / 레이어 / 관점)으로 다시 배치한다.
  */
 interface Props {
 	posts: Post[];
@@ -14,9 +14,11 @@ interface Props {
 	empty?: string;
 	/** 표 머리글(NAME LAYERS …)을 숨긴다 — 글 끝 관련 글처럼 문맥상 뻔할 때 */
 	headless?: boolean;
+	/** LAYERS 칸을 TAGS로 — 레이어를 달지 않는 카테고리(study) 탭에서만. 제목 아래 태그 줄은 중복이라 뺀다 */
+	tagColumn?: boolean;
 }
 
-const { posts, empty = '아직 발행한 글이 없다.', headless = false } = Astro.props;
+const { posts, empty = '아직 발행한 글이 없다.', headless = false, tagColumn = false } = Astro.props;
 ---
 
 {
@@ -27,25 +29,34 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false } = A
 			{!headless && (
 				<div class="tr th" aria-hidden="true">
 					<div>NAME</div>
-					<div>LAYERS</div>
+					<div>CATEGORY</div>
+					<div>{tagColumn ? 'TAGS' : 'LAYERS'}</div>
 					<div>STANCE</div>
-					<div class="age">AGE</div>
+					<div class="age">DATE</div>
 				</div>
 			)}
 			{posts.map((post) => (
 				<a class="tr" href={`/posts/${post.id}/`} role="listitem">
 					<div class="name">
 						{post.data.pinned && <span class="pin">PINNED</span>}
-						<span class="catp">{post.data.category}/</span>
 						{post.data.title}
-						{post.data.tags.length > 0 && (
+						{!tagColumn && post.data.tags.length > 0 && (
 							<small>{post.data.tags.slice(0, 2).map((tag) => `#${tag}`).join(' ')}</small>
 						)}
 					</div>
-					<div class="route">{post.data.layers && <LayerRoute layers={post.data.layers} />}</div>
+					<div class="meta">
+						<div class="cat">{post.data.category}</div>
+						<div class="route">
+							{tagColumn ? (
+								<span class="tags">{post.data.tags.map((tag) => <span class="tg">#{tag}</span>)}</span>
+							) : (
+								post.data.layers && <LayerRoute layers={post.data.layers} />
+							)}
+						</div>
+					</div>
 					<div class="stance">{post.data.stance ?? post.data.description}</div>
 					<div class="age">
-						<time datetime={post.data.pubDate.toISOString()}>{formatAge(post.data.pubDate)}</time>
+						<time datetime={post.data.pubDate.toISOString()}>{formatPubDate(post.data.pubDate)}</time>
 					</div>
 				</a>
 			))}
@@ -54,17 +65,20 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false } = A
 }
 
 <style>
-	.catp {
-		margin-right: 2px;
+	/* PC: .meta는 상자 없이 칸 둘(CATEGORY · LAYERS)로 풀린다 */
+	.meta {
+		display: contents;
+	}
+	.cat {
 		color: var(--dim);
-		font: 400 0.95em var(--mono);
+		font: 13px/1.9 var(--mono);
 	}
 	.tbl {
 		border-top: 1px solid var(--line);
 	}
 	.tr {
 		display: grid;
-		grid-template-columns: minmax(0, 1.5fr) 196px minmax(0, 1.4fr) 56px;
+		grid-template-columns: minmax(0, 1.5fr) 72px 216px minmax(0, 1.4fr) 80px;
 		gap: 18px;
 		align-items: start;
 		padding: 16px 8px;
@@ -99,6 +113,19 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false } = A
 		font: 400 11px var(--mono);
 		vertical-align: 2px;
 	}
+	.tags {
+		display: inline-flex;
+		flex-wrap: wrap;
+		gap: 4px 6px;
+	}
+	.tg {
+		padding: 1px 7px;
+		border: 1px solid var(--line);
+		border-radius: 3px;
+		color: var(--dim);
+		font: 12px/1.5 var(--mono);
+		white-space: nowrap;
+	}
 	.stance {
 		padding-left: 12px;
 		border-left: 2px solid var(--line);
@@ -117,14 +144,19 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false } = A
 	}
 	@media (max-width: 720px) {
 		.tr {
-			grid-template-columns: 1fr 44px;
+			grid-template-columns: 1fr 80px;
 			gap: 8px 10px;
 			padding: 16px 4px;
 		}
 		.th {
 			display: none;
 		}
-		.route {
+		/* 모바일: 둘째 줄에 카테고리 · 레이어 나란히 */
+		.meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px 10px;
+			align-items: center;
 			grid-column: 1 / 2;
 			grid-row: 2;
 		}

@@ -25,6 +25,11 @@ const shown = layer ? base.filter((post) => post.data.layers?.includes(layer)) :
 const cats = getCategoryCounts(all);
 const counts = getLayerCounts(base);
 const allHref = category ? `/posts/category/${category}` : '/posts';
+// 레이어를 달지 않는 카테고리(study 등, categories.ts layered: false)는 레이어 칩 대신 태그 칩, 표의 LAYERS 칸도 TAGS로
+const tagged = category !== undefined && !categoryOf(category).layered;
+const tagCount = new Map<string, number>();
+if (tagged) for (const p of base) for (const t of p.data.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+const tags = [...tagCount].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 ---
 
 <h1 class="sec">
@@ -51,7 +56,19 @@ const allHref = category ? `/posts/category/${category}` : '/posts';
 {category && <p class="desc dim mono">{category} — {categoryOf(category).description}</p>}
 
 {
-	base.length > 0 && (
+	tagged && tags.length > 0 && (
+		<nav class="filters" aria-label="태그로 찾기">
+			{tags.map(([t, n]) => (
+				<a href={`/search?q=${encodeURIComponent(t)}`} class="ly tag">
+					#{t} {n}
+				</a>
+			))}
+		</nav>
+	)
+}
+
+{
+	!tagged && base.length > 0 && (
 		<nav class="filters" aria-label="영역 필터">
 			<a href={allHref} class:list={['ly', { on: !layer }]} style="color: var(--hi)" aria-current={!layer && category ? 'page' : undefined}>
 				all {base.length}
@@ -70,7 +87,7 @@ const allHref = category ? `/posts/category/${category}` : '/posts';
 	)
 }
 
-<PostTable posts={shown} />
+<PostTable posts={shown} tagColumn={tagged} />
 
 <style>
 	.sec {
@@ -129,6 +146,13 @@ const allHref = category ? `/posts/category/${category}` : '/posts';
 	   흐리기 대신 고른 칩만 배경 + 굵게 표시한다. */
 	.ly:hover {
 		background: var(--hover);
+	}
+	/* 태그 칩: 레이어 색 없이 회색, 누르면 /search?q=<태그> */
+	.ly.tag {
+		color: var(--dim);
+	}
+	.ly.tag:hover {
+		color: var(--hi);
 	}
 	.ly.on {
 		background: var(--chipon);

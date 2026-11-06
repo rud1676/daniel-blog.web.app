@@ -19,6 +19,6 @@ interface Props {
 const { category, posts } = Astro.props;
 ---
 
-<BaseLayout title={`${category} 글`} description={`${categoryOf(category).description}.`}>
+<BaseLayout title={`${category} 글`} description={categoryOf(category).description}>
 	<PostsIndex all={posts} category={category} />
 </BaseLayout>
