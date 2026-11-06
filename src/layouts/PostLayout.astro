@@ -14,6 +14,7 @@ import LayerRoute from '../components/LayerRoute.astro';
 import PostTable from '../components/PostTable.astro';
 import { categoryOf } from '../lib/categories';
 import type { Post } from '../lib/posts';
+import { formatUpdated, formatViews, getViews } from '../lib/views';
 
 interface Props {
 	post: Post;
@@ -29,6 +30,9 @@ const { title, description, pubDate, updatedDate, heroImage, canonical, category
 const toc = headings.filter((h) => h.depth === 2);
 const showToc = toc.length >= 2;
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
+/** 조회수 — 빌드 때 BigQuery에서 센 값. 집계를 안 하는 빌드(로컬 기본)면 줄 자체를 숨긴다 */
+const views = await getViews();
+const viewCount = views.counts[post.id];
 ---
 
 <!doctype html>
@@ -71,6 +75,20 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 						<time datetime={pubDate.toISOString()}>{ymd(pubDate)}</time> · {minutes} min read
 						{updatedDate && <> · updated <time datetime={updatedDate.toISOString()}>{ymd(updatedDate)}</time></>}
 					</div>
+					{
+						views.updatedAt && (
+							<div>
+								<b>VIEWS</b>
+								{viewCount ? (
+									<>
+										{formatViews(viewCount)} <span class="vu">(updated {formatUpdated(views.updatedAt)})</span>
+									</>
+								) : (
+									<span class="vu">— 집계 전 (다음 06:00 빌드부터)</span>
+								)}
+							</div>
+						)
+					}
 					{
 						stance && (
 							<div class="st-row">
@@ -202,6 +220,9 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 		width: 78px;
 		color: var(--acc);
 		font-weight: 400;
+	}
+	.meta .vu {
+		color: var(--dim);
 	}
 	.st-row {
 		display: flex;

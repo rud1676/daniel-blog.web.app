@@ -1,10 +1,12 @@
 ---
 import { formatPubDate } from '../lib/age';
 import type { Post } from '../lib/posts';
+import { formatViews, getViews } from '../lib/views';
 import LayerRoute from './LayerRoute.astro';
 
 /**
- * 글 표: NAME / CATEGORY / LAYERS / STANCE / DATE. 행 전체가 글 링크다.
+ * 글 표: NAME / CATEGORY / LAYERS / STANCE / DATE(+ 아래 views). 행 전체가 글 링크다.
+ * views는 빌드 때 BigQuery에서 센 값(lib/views.ts) — 집계 안 한 빌드거나 0이면 안 보인다.
  * 홈·/posts·레이어 필터·글 끝 "같은 레이어 글"이 같이 쓴다. JS 0.
  * 720px 이하에선 카드형(제목·DATE / 레이어 / 관점)으로 다시 배치한다.
  */
@@ -19,6 +21,8 @@ interface Props {
 }
 
 const { posts, empty = '아직 발행한 글이 없다.', headless = false, tagColumn = false } = Astro.props;
+const views = await getViews();
+const hasViews = views.updatedAt !== null;
 ---
 
 {
@@ -32,7 +36,7 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false, tagC
 					<div>CATEGORY</div>
 					<div>{tagColumn ? 'TAGS' : 'LAYERS'}</div>
 					<div>STANCE</div>
-					<div class="age">DATE</div>
+					<div class="age">DATE{hasViews && <span class="vw">VIEWS</span>}</div>
 				</div>
 			)}
 			{posts.map((post) => (
@@ -57,6 +61,7 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false, tagC
 					<div class="stance">{post.data.stance ?? post.data.description}</div>
 					<div class="age">
 						<time datetime={post.data.pubDate.toISOString()}>{formatPubDate(post.data.pubDate)}</time>
+						{views.counts[post.id] > 0 && <span class="vw">{formatViews(views.counts[post.id])} views</span>}
 					</div>
 				</a>
 			))}
@@ -136,6 +141,11 @@ const { posts, empty = '아직 발행한 글이 없다.', headless = false, tagC
 		color: var(--dim);
 		font: 12px var(--mono);
 		text-align: right;
+	}
+	.vw {
+		display: block;
+		margin-top: 2px;
+		font-size: 11px;
 	}
 	.empty {
 		padding: 16px 8px;

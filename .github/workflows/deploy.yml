@@ -1,6 +1,6 @@
 # live 배포 — `live-*` 태그를 push할 때만 나간다. main push로는 배포되지 않는다.
 #   git tag live-2026-11-05 && git push origin live-2026-11-05   (같은 날 두 번째는 live-2026-11-05.2)
-# 매일 06:00(KST) cron은 "가장 최근 live-* 태그"를 다시 빌드한다 — 글 표 AGE 갱신용. 태그 안 한 main 커밋은 안 나간다.
+# 매일 06:00(KST) cron은 "가장 최근 live-* 태그"를 다시 빌드한다 — 글 표 AGE·조회수(views) 갱신용. 태그 안 한 main 커밋은 안 나간다.
 # 수동 재배포: Actions → deploy → Run workflow (태그 이름, 비우면 최근 태그).
 #
 # 필요한 저장소 설정 (Settings → Secrets and variables → Actions):
@@ -74,12 +74,20 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      # 빌드 전에 인증한다 — 빌드가 BigQuery에서 글 조회수를 읽는다(src/lib/views.ts, bq CLI는 러너에 기본 설치)
+      - uses: google-github-actions/auth@v3
+        if: steps.target.outputs.skip != 'true'
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER }}
+
       - name: 빌드
         if: steps.target.outputs.skip != 'true'
         env:
           GITLOG_LIVE: '1'
           GITLOG_TAG: ${{ steps.target.outputs.tag }}
           DENY_WORDS: ${{ secrets.DENY_WORDS }}
+          VIEWS_BQ: '1'
         run: |
           npm ci
           npm run build
@@ -91,12 +99,6 @@ jobs:
       - name: 분류 목록 검사 (레이어·카테고리 하드코딩, 색 토큰)
         if: steps.target.outputs.skip != 'true'
         run: npm run check:taxonomy
-
-      - uses: google-github-actions/auth@v3
-        if: steps.target.outputs.skip != 'true'
-        with:
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOYER }}
 
       - name: Firebase Hosting 배포
         if: steps.target.outputs.skip != 'true'
