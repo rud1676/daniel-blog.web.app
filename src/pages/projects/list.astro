@@ -1,5 +1,5 @@
 ---
-// /projects/list — 모아보기. `kubectl get pods` 표. 행 → /projects#<slug>. JS 0.
+// /projects/list — 모아보기. 프로젝트 표. 행 → /projects#<slug>. JS 0.
 import LayerRoute from '../../components/LayerRoute.astro';
 import ViewTabs from '../../components/projects/ViewTabs.astro';
 import { projects } from '../../data/projects';
@@ -7,7 +7,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="projects — 모아보기" description="Daniel의 개인 프로젝트 목록.">
-	<p class="crumb mono"><span class="p">$</span> kubectl get pods -n projects -o wide</p>
+	<p class="crumb mono"><span class="p">$</span> ls -l ~/projects</p>
 	<h1 class="sr-only">프로젝트 모아보기</h1>
 	<div class="pl mono" role="list">
 		<div class="plr th" aria-hidden="true">

@@ -1,16 +1,16 @@
 ---
-// 콘솔 문법의 404. Firebase Hosting이 dist/404.html을 없는 주소에 자동으로 보여 준다.
+// 셸 문법의 404. Firebase Hosting이 dist/404.html을 없는 주소에 자동으로 보여 준다.
 // JS 0 — 그래서 실제 요청 주소를 넣지 않고 "요청한 주소"라는 고정 문구를 쓴다 (plan D8).
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="404" description="찾는 글이 없다.">
-	<pre class="nf"><span class="p">$</span> kubectl get posts 요청한-주소
-<span class="w">Error from server (NotFound):</span> posts "요청한 주소" not found
+	<pre class="nf"><span class="p">$</span> cd 요청한-주소
+<span class="w">cd: no such file or directory:</span> 요청한-주소
 
 <span class="dim"># 주소가 바뀌었거나 아직 없는 글이에요.</span>
-<span class="p">$</span> <a href="/">cd ~</a>                   <span class="dim"># 홈으로</span>
-<span class="p">$</span> <a href="/posts">kubectl get posts -A</a>   <span class="dim"># 전체 글 보기</span>
+<span class="p">$</span> <a href="/">open ~</a>      <span class="dim"># 홈으로</span>
+<span class="p">$</span> <a href="/posts">ls /posts</a>   <span class="dim"># 전체 글 보기</span>
 <span class="p">$</span> <span class="cur" aria-hidden="true">▌</span></pre>
 </BaseLayout>
 

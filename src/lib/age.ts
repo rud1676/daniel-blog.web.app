@@ -4,7 +4,7 @@
  */
 export const BUILD_TIME = new Date();
 
-/** kubectl AGE 열처럼 짧게: 45m · 5h · 14d (1년이 넘어도 d로 센다) */
+/** 짧은 경과 표기: 45m · 5h · 14d (1년이 넘어도 d로 센다) */
 export function formatAge(from: Date, now: Date = BUILD_TIME): string {
 	const minutes = Math.max(0, Math.floor((now.valueOf() - from.valueOf()) / 60_000));
 	if (minutes < 60) return `${minutes}m`;
