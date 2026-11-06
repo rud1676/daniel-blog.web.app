@@ -1,0 +1,183 @@
+---
+// /search — 글 검색. 제목·태그·stance만 찾는다(본문 X). JS는 이 페이지에서만 쓴다 (/cli와 같은 취급, JS 0 페이지 아님).
+// 발행 글 전체를 빌드 때 PostTable로 그려 두고(hidden), src/scripts/search.ts가 입력값으로 행을 숨기고 보인다.
+// 검색어는 주소 ?q= 에 남는다 → 새로고침·뒤로가기·공유에 유지, 태그 칩은 평범한 링크.
+// 기획: 워크스페이스 prd/blog-search · plan/blog-search-plan.md
+import PostTable from '../components/PostTable.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPublishedPosts } from '../lib/posts';
+
+/** 입력 전 화면의 태그 칩 수 */
+const TAG_CHIPS = 8;
+
+const posts = await getPublishedPosts();
+
+// 검색 대상 텍스트: slug → 제목 · 전체 태그 · stance(없으면 description). 표엔 태그가 2개만 보여서 따로 넘긴다
+const index = Object.fromEntries(
+	posts.map((p) => [
+		`/posts/${p.id}/`,
+		[p.data.title, p.data.tags.map((t) => `#${t}`).join(' '), p.data.stance ?? p.data.description].join('\n'),
+	]),
+);
+
+// 자주 쓴 태그 상위 N개 (동률은 이름순)
+const tagCount = new Map<string, number>();
+for (const p of posts) for (const t of p.data.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+const tags = [...tagCount]
+	.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+	.slice(0, TAG_CHIPS);
+---
+
+<BaseLayout title="검색" description="제목·태그·한 줄 관점으로 글을 찾는다.">
+	<h1 class="sec">검색</h1>
+	<form class="sbox" role="search" action="/search" data-search-form>
+		<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+			<circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+			<path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+		</svg>
+		<input
+			type="search"
+			name="q"
+			data-search-input
+			placeholder="제목, 태그, 한 줄 관점으로 찾기"
+			aria-label="글 검색"
+			autocomplete="off"
+			spellcheck="false"
+			autofocus
+		/>
+		<kbd aria-hidden="true">esc</kbd>
+	</form>
+
+	<noscript><p class="hint">검색은 JavaScript가 필요해요. 글 전체는 <a href="/posts">/posts</a>에서 볼 수 있어요.</p></noscript>
+
+	<div data-idle>
+		<p class="hint dim">제목 · 태그 · 한 줄 관점(stance)에서 찾아요. 본문은 검색하지 않아요.</p>
+		{
+			tags.length > 0 && (
+				<>
+					<p class="hint dim">태그로 찾기</p>
+					<nav class="tags" aria-label="자주 쓴 태그">
+						{tags.map(([t, n]) => (
+							<a href={`/search?q=${encodeURIComponent(t)}`}>
+								#{t} <span class="dim">{n}</span>
+							</a>
+						))}
+					</nav>
+				</>
+			)
+		}
+	</div>
+
+	<p class="count" data-count hidden aria-live="polite"></p>
+
+	<div class="empty" data-empty hidden>
+		<p data-empty-msg></p>
+		<p class="dim">글 본문은 검색하지 않아요. 다른 단어로 찾아보거나 <a href="/posts">전체 글 {posts.length}편 보기 →</a></p>
+	</div>
+
+	<div data-results hidden>
+		<PostTable posts={posts} />
+	</div>
+
+	<script type="application/json" data-search-index set:html={JSON.stringify(index).replace(/</g, '\\u003c')} />
+</BaseLayout>
+
+<script>
+	import '../scripts/search';
+</script>
+
+<style>
+	.sec {
+		margin: 4px 0 12px;
+		color: var(--hi);
+		font: 600 15px var(--sans);
+	}
+	.sbox {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin: 4px 0 18px;
+		padding: 12px 14px;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		background: var(--bg2);
+		color: var(--dim);
+	}
+	.sbox:focus-within {
+		border-color: var(--acc);
+	}
+	.sbox svg {
+		flex: none;
+	}
+	.sbox input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		background: none;
+		outline: 0;
+		color: var(--hi);
+		font: 15px var(--sans);
+	}
+	/* 브라우저 기본 지우기(x) 버튼은 숨긴다 — Esc로 지운다 */
+	.sbox input::-webkit-search-cancel-button {
+		appearance: none;
+	}
+	kbd {
+		padding: 0 5px;
+		border: 1px solid var(--line);
+		border-radius: 4px;
+		color: var(--dim);
+		font: 11px var(--mono);
+	}
+	.hint,
+	.empty p,
+	.count {
+		margin: 0 0 10px;
+		font-size: 13px;
+	}
+	.hint a,
+	.empty a {
+		color: var(--acc);
+	}
+	.count b {
+		color: var(--hi);
+	}
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-bottom: 12px;
+	}
+	.tags a {
+		padding: 3px 9px;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		color: var(--tx);
+		font: 12px var(--mono);
+	}
+	.tags a:hover {
+		border-color: var(--acc);
+		color: var(--hi);
+	}
+	/* PostTable의 .tr { display: grid }가 hidden 속성을 덮어쓰므로 여기서 다시 숨긴다 */
+	[data-results] :global(.tr[hidden]) {
+		display: none;
+	}
+	[data-results] :global(mark) {
+		border-radius: 2px;
+		background: color-mix(in srgb, var(--warn) 30%, transparent);
+		color: inherit;
+	}
+	@media (max-width: 720px) {
+		.sbox {
+			padding: 10px;
+		}
+		/* iOS는 16px 미만 입력창에 포커스하면 화면을 확대한다 */
+		.sbox input {
+			font-size: 16px;
+		}
+		kbd {
+			display: none;
+		}
+	}
+</style>

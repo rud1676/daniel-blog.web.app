@@ -4,6 +4,8 @@
 const section = Astro.url.pathname.split('/')[1] ?? '';
 const nav = [
 	{ href: '/posts', label: 'posts', key: 'posts' },
+	// 검색은 /search 페이지에만 JS가 있다. 헤더는 링크뿐이라 다른 페이지의 JS 0은 그대로다. 단축키(/)는 두지 않는다.
+	{ href: '/search', label: 'search', key: 'search' },
 	{ href: '/cli', label: 'cli', key: 'cli' },
 	// projects는 임시로 메뉴에서 뺐다(2026-11-05). 페이지(/projects, /projects/list)는 그대로 있다.
 	// { href: '/projects', label: 'projects', key: 'projects' },
