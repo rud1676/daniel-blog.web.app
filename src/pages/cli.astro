@@ -1,27 +1,37 @@
 ---
 // /cli — 블로그를 명령어로 둘러보는 셸 + dagent(AI). JS는 이 페이지에서만 쓴다 (글 상세 예산과 무관).
-// 셸: src/scripts/terminal/index.ts · dagent: 같은 폴더 dagent.ts (실행할 때 import()).
+// 셸: src/scripts/terminal/index.ts(부팅) · fs.ts(홈 디렉터리) · commands.ts(명령) · dagent.ts(실행할 때 import()).
+// 레이어·카테고리 목록은 data-layers·data-categories로 넘긴다 — 터미널 TS에 다시 쓰지 않는다 (AGENTS.md 분류 규칙).
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { CATEGORIES } from '../lib/categories';
+import { getFirstCommitDate } from '../lib/gitlog';
 import { LAYERS } from '../lib/layers';
+
+// neofetch·uptime의 블로그 나이. git이 없으면 속성을 빼고 그 줄을 숨긴다
+const born = getFirstCommitDate();
 ---
 
 <BaseLayout title="cli" description="Daniel 블로그 셸 — 명령어로 글을 둘러보고, dagent로 AI 버전의 Daniel과 대화한다.">
 	<p class="crumb mono"><span class="p">$</span> cd ~/cli <span class="dim"># 블로그를 명령어로 둘러보기 · AI는 dagent</span></p>
-	<section class="z" aria-label="블로그 셸" data-term data-layers={LAYERS.join(' ')}>
+	<section class="z" aria-label="블로그 셸" data-term data-layers={LAYERS.join(' ')} data-categories={CATEGORIES.map((c) => c.id).join(' ')} data-born={born ?? undefined}>
 		<div class="zb">
 			<span class="led" data-led aria-hidden="true"></span><b>daniel@blog</b>
 			<span class="dim" data-mode> sh · help로 명령어 보기</span>
 			<span class="zr">⌘K 지우기 · ↑ 기록</span>
 		</div>
 		<div class="out" data-out role="log" aria-live="polite">
-			<p class="dim">Daniel blog shell — help를 입력하면 쓸 수 있는 명령어가 나와요.</p>
+			<p class="dim">Daniel blog shell — <b class="hi">ls</b>로 글 폴더를, <b class="hi">help</b>로 명령어를 볼 수 있어요.</p>
 			<p><span class="dim">Tip:</span> <b class="hi">dagent</b><span class="dim">를 실행하면 AI 버전의 Daniel과 대화할 수 있어요.</span></p>
 			<noscript><p class="err">이 페이지는 JavaScript가 필요해요. 글은 <a href="/posts">/posts</a>에서 볼 수 있어요.</p></noscript>
 		</div>
+		<div class="alt" data-alt tabindex="-1" hidden></div>
 		<form class="zin" data-form autocomplete="off">
-			<label for="cmd" class="pr" data-prompt>$</label>
+			<label for="cmd" class="pr" data-prompt><span class="cwd">~</span> $</label>
 			<input id="cmd" data-input type="text" spellcheck="false" autocapitalize="off" aria-label="명령어 입력" placeholder="help" />
 		</form>
+		<div class="chips" aria-label="자주 쓰는 명령">
+			{['help', 'ls', 'cd ..', 'kubectx', 'dagent'].map((c) => <button type="button" data-cmd={c}>{c}</button>)}
+		</div>
 	</section>
 </BaseLayout>
 
@@ -121,15 +131,19 @@ import { LAYERS } from '../lib/layers';
 		gap: 0 2ch;
 		padding-left: 2ch;
 	}
-	.out :global(.row) {
+	/* ls -l: 권한 · 소유자 · 그룹(=레이어) · 크기 · 날짜 · 이름 # 제목 */
+	.out :global(.ls) {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 22ch) 6ch;
-		gap: 0 2ch;
+		grid-template-columns: 11ch 7ch 16ch 4ch 6ch minmax(0, 1fr);
+		gap: 0 1ch;
 	}
-	.out :global(.row > span) {
+	.out :global(.ls > span:last-child) {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+	.z :global(.cwd) {
+		color: var(--acc);
 	}
 	.out :global(p.cmd) {
 		margin-top: 0.9em;
@@ -183,6 +197,254 @@ import { LAYERS } from '../lib/layers';
 	input::placeholder {
 		color: var(--dot);
 	}
+	/* 모바일 명령 칩 */
+	.chips {
+		display: none;
+		gap: 6px;
+		padding: 0 14px 12px;
+		overflow-x: auto;
+		font: 13px var(--mono);
+	}
+	.chips button {
+		flex: none;
+		padding: 4px 10px;
+		border: 1px solid var(--line);
+		border-radius: 14px;
+		background: var(--bg2);
+		color: var(--tx);
+		font: inherit;
+		cursor: pointer;
+	}
+	/* 시스템 명령 (sys.ts) */
+	.out :global(.ns) {
+		color: var(--warn);
+	}
+	.out :global(.neo) {
+		display: flex;
+		gap: 3ch;
+		align-items: flex-start;
+	}
+	.out :global(.neo .logo) {
+		margin: 0;
+		color: var(--acc);
+		font: inherit;
+	}
+	.out :global(.sws) {
+		margin-top: 0.4em;
+	}
+	.out :global(.sw) {
+		display: inline-block;
+		width: 2.2ch;
+		height: 1em;
+		margin-right: 2px;
+		vertical-align: middle;
+	}
+	.out :global(.ns-row) {
+		display: grid;
+		grid-template-columns: 6ch 22ch 12ch 7ch 7ch minmax(0, 1fr);
+		gap: 0 1ch;
+	}
+	.out :global(.ns-row.df) {
+		grid-template-columns: 11ch 6ch 6ch 6ch 5ch minmax(0, 1fr);
+	}
+	.z :global(:is(.ns-row, .tp) > span) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.z :global(:is(.ns-row, .tp).th) {
+		background: var(--chipon);
+		color: var(--hi);
+	}
+	.alt :global(.topv) {
+		padding: 14px 22px;
+		white-space: pre-wrap;
+	}
+	.alt :global(.topv p) {
+		margin: 0;
+	}
+	.alt :global(.tp) {
+		display: grid;
+		grid-template-columns: 5ch 6ch 3ch 6ch 7ch minmax(0, 1fr);
+		gap: 0 1ch;
+	}
+	.alt :global(.topv .ns),
+	.out :global(.ns) {
+		color: var(--warn);
+	}
+	.out :global(.cal) {
+		margin: 0;
+		font: inherit;
+	}
+	.out :global(.cal .today) {
+		padding: 0 2px;
+		background: var(--ok);
+		color: var(--bg);
+	}
+	.out :global(.post) {
+		color: var(--acc);
+		text-decoration: underline;
+	}
+	.out :global(.today-mark) {
+		color: var(--ok);
+	}
+	/* 대체 화면 (glow·top) — 열려 있는 동안 출력·입력을 가린다 (pager.ts) */
+	.z:global(.alt-on) .out,
+	.z:global(.alt-on) .zin {
+		display: none;
+	}
+	.alt {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		min-height: 0;
+		outline: 0;
+		font: 14px/1.75 var(--mono);
+	}
+	.alt[hidden] {
+		display: none;
+	}
+	.alt :global(.gtop),
+	.alt :global(.gbar) {
+		display: flex;
+		gap: 1ch;
+		align-items: center;
+		padding: 6px 14px;
+		background: var(--bg2);
+		color: var(--dim);
+		font-size: 12px;
+	}
+	.alt :global(.gtop) {
+		border-bottom: 1px solid var(--line);
+	}
+	.alt :global(.gbar) {
+		border-top: 1px solid var(--line);
+	}
+	.alt :global(.gt) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.alt :global(.gr) {
+		margin-left: auto;
+		white-space: nowrap;
+	}
+	.alt :global(.gq) {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		cursor: pointer;
+	}
+	.alt :global(.gscroll) {
+		flex: 1;
+		max-height: 62vh;
+		min-height: 420px;
+		overflow-y: auto;
+		outline: 0;
+		background: var(--bg);
+	}
+	/* glow 본문 — 글 상세와 같은 HTML, 색만 터미널 톤 */
+	.alt :global(.gbody) {
+		max-width: 86ch;
+		padding: 14px 22px 28px;
+		color: var(--body);
+		overflow-wrap: anywhere;
+	}
+	.alt :global(.gbody :is(h1, h2, h3, h4)) {
+		margin: 1.1em 0 0.4em;
+		color: var(--hi);
+		font-size: 15px;
+		line-height: 1.6;
+	}
+	.alt :global(.gbody h1) {
+		margin-top: 0.2em;
+		color: var(--acc);
+	}
+	.alt :global(.gh) {
+		color: var(--dim);
+		font-weight: 400;
+	}
+	.alt :global(.gbody :is(p, li)) {
+		margin: 0.4em 0;
+	}
+	.alt :global(.gmeta) {
+		margin: 0.1em 0;
+		color: var(--dim);
+		font-size: 12px;
+	}
+	.alt :global(.gbody :is(b, strong)) {
+		color: var(--hi);
+	}
+	.alt :global(.gbody :not(pre) > code) {
+		padding: 0 4px;
+		border-radius: 3px;
+		background: var(--chipon);
+		color: var(--hi);
+	}
+	.alt :global(.gbody pre) {
+		margin: 0.6em 0;
+		padding: 10px 12px;
+		overflow-x: auto;
+		border-radius: 4px;
+		font-size: 13px;
+	}
+	.alt :global(.gbody blockquote) {
+		margin: 0.5em 0;
+		padding-left: 1.5ch;
+		border-left: 2px solid var(--line);
+		color: var(--dim);
+	}
+	.alt :global(.gbody :is(ul, ol)) {
+		margin: 0.3em 0;
+		padding-left: 3ch;
+	}
+	.alt :global(.gbody table) {
+		display: block;
+		overflow-x: auto;
+		border-collapse: collapse;
+		font-size: 13px;
+	}
+	.alt :global(.gbody :is(th, td)) {
+		padding: 2px 1ch;
+		border: 1px solid var(--line);
+	}
+	.alt :global(.gbody a) {
+		color: var(--acc);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.alt :global(.gph) {
+		display: block;
+		color: var(--dim);
+		font-style: italic;
+	}
+	.alt :global(.gx) {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--acc);
+		font: inherit;
+		font-style: normal;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		cursor: pointer;
+	}
+	.alt :global(.gimg) {
+		margin: 0.6em 0;
+	}
+	.alt :global(.gimg img) {
+		max-width: 100%;
+		height: auto;
+		max-height: 340px;
+		border-radius: 4px;
+		background: #fff;
+	}
+	.alt :global(.gimg figcaption) {
+		color: var(--dim);
+		font-size: 12px;
+	}
 	@media (max-width: 720px) {
 		.z {
 			min-height: 70vh;
@@ -197,11 +459,50 @@ import { LAYERS } from '../lib/layers';
 		.out :global(.hl) {
 			grid-template-columns: 1fr;
 		}
-		.out :global(.row) {
-			grid-template-columns: minmax(0, 1fr) 5ch;
+		/* 모바일 ls -l: 파일 이름과 제목만 */
+		.out :global(.ls) {
+			grid-template-columns: 1fr;
 		}
-		.out :global(.row > span:nth-child(2)) {
+		.out :global(.ls > span:not(:last-child)) {
 			display: none;
+		}
+		.out :global(.ls .ttl) {
+			display: block;
+			white-space: normal;
+		}
+		.alt {
+			font-size: 13px;
+		}
+		.chips {
+			display: flex;
+		}
+		.z:global(.alt-on) .chips {
+			display: none;
+		}
+		.out :global(.neo .logo) {
+			display: none;
+		}
+		.out :global(.ns-row) {
+			grid-template-columns: 5ch minmax(0, 1fr) 10ch;
+		}
+		.out :global(.ns-row > span:nth-child(n + 4)) {
+			display: none;
+		}
+		.alt :global(.topv) {
+			padding: 10px 12px;
+		}
+		.alt :global(.tp) {
+			grid-template-columns: 4ch 3ch 6ch minmax(0, 1fr);
+		}
+		.alt :global(.tp > span:is(:nth-child(2), :nth-child(5))) {
+			display: none;
+		}
+		.alt :global(.gscroll) {
+			max-height: 70vh;
+			min-height: 0;
+		}
+		.alt :global(.gbody) {
+			padding: 10px 12px 24px;
 		}
 		.zin {
 			padding: 12px 14px;

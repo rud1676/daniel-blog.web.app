@@ -141,6 +141,15 @@ function checkDenyWords(lines: GitLine[]) {
 	if (bad.length) throw new Error(`git log 표시 문구에 금지어가 있다. 커밋: ${bad.map((l) => l.short).join(', ')}`);
 }
 
+/**
+ * 이 레포 첫 커밋의 KST 날짜(YYYY-MM-DD) — /cli `neofetch`·`uptime`의 블로그 나이.
+ * git이 없는 빌드 환경이면 null (빌드는 그대로 성공해야 한다).
+ */
+export function getFirstCommitDate(): string | null {
+	const out = tryGit(['log', '--reverse', '--date=format-local:%Y-%m-%d', '--format=%ad', 'HEAD']);
+	return out?.split('\n')[0] || null;
+}
+
 let cache: Promise<GitLog> | undefined;
 
 /** 빌드당 한 번만 계산한다 (홈 히어로와 /gitlog.json 이 같은 값을 쓴다). */
