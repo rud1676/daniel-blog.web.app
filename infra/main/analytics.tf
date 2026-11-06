@@ -37,9 +37,12 @@ resource "google_logging_project_sink" "hosting_to_bq" {
   name        = "hosting-to-bq"
   destination = "bigquery.googleapis.com/projects/${var.project_id}/datasets/${google_bigquery_dataset.hosting_logs.dataset_id}"
 
+  # 로그 이름은 "webrequests"가 아니라 "firebasehosting.googleapis.com%2Fwebrequests"다.
+  # 처음엔 앞쪽을 빼먹어 아무 로그도 안 걸렸다 (2026-11-06 수정). BigQuery 테이블 이름은
+  # firebasehosting_googleapis_com_webrequests 가 된다.
   filter = <<-EOT
     resource.type="firebase_domain"
-    AND logName="projects/${var.project_id}/logs/webrequests"
+    AND logName="projects/${var.project_id}/logs/firebasehosting.googleapis.com%2Fwebrequests"
     AND NOT httpRequest.requestUrl:"/_astro/"
     AND NOT httpRequest.requestUrl:"/favicon"
   EOT
@@ -57,4 +60,21 @@ resource "google_bigquery_dataset_iam_member" "sink_writer" {
   dataset_id = google_bigquery_dataset.hosting_logs.dataset_id
   role       = "roles/bigquery.dataEditor"
   member     = google_logging_project_sink.hosting_to_bq.writer_identity
+}
+
+# 글 조회수(prd/post-views) — 배포 빌드가 이 데이터셋을 읽어 views를 정적 HTML에 박는다.
+# 읽기만: 데이터셋 dataViewer + 쿼리 실행(jobUser, 프로젝트 단위밖에 없다)
+resource "google_bigquery_dataset_iam_member" "deployer_reader" {
+  provider   = google-beta
+  project    = var.project_id
+  dataset_id = google_bigquery_dataset.hosting_logs.dataset_id
+  role       = "roles/bigquery.dataViewer"
+  member     = "serviceAccount:${google_service_account.deployer.email}"
+}
+
+resource "google_project_iam_member" "deployer_bq_job" {
+  provider = google-beta
+  project  = var.project_id
+  role     = "roles/bigquery.jobUser"
+  member   = "serviceAccount:${google_service_account.deployer.email}"
 }

@@ -74,7 +74,7 @@ DNS는 Cloudflare에 있다. Terraform은 Firebase 쪽 연결만 만든다.
 | 리소스 | 내용 |
 |---|---|
 | `google_bigquery_dataset.hosting_logs` | US, 파티션 400일 뒤 삭제(저장량 상한) |
-| `google_logging_project_sink.hosting_to_bq` | `firebase_domain` · `webrequests` 로그 → 위 데이터셋(파티션 테이블) |
+| `google_logging_project_sink.hosting_to_bq` | `firebase_domain` · `firebasehosting.googleapis.com%2Fwebrequests` 로그 → 위 데이터셋(파티션 테이블) |
 | `google_bigquery_dataset_iam_member.sink_writer` | 싱크 writer identity에 `roles/bigquery.dataEditor` |
 
 비용: Logging 수집 월 50GiB·싱크 라우팅·BigQuery 저장 10GiB·조회 1TiB는 무료 한도 안. **BigQuery 스트리밍 적재만 200MB당 $0.01**(월 수 원~수십 원) — 월 예산 알림 1,000원 안.
@@ -85,7 +85,7 @@ DNS는 Cloudflare에 있다. Terraform은 Firebase 쪽 연결만 만든다.
 
 ```sql
 SELECT DATE(timestamp) AS day, httpRequest.requestUrl AS url, COUNT(*) AS views
-FROM `daniel-blog-1676.hosting_logs.webrequests`
+FROM `daniel-blog-1676.hosting_logs.firebasehosting_googleapis_com_webrequests`
 WHERE httpRequest.status = 200 AND NOT REGEXP_CONTAINS(httpRequest.userAgent, r'(?i)bot|crawler|spider')
 GROUP BY day, url ORDER BY day DESC, views DESC
 ```
