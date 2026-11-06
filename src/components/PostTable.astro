@@ -61,7 +61,7 @@ const hasViews = views.updatedAt !== null;
 					<div class="stance">{post.data.stance ?? post.data.description}</div>
 					<div class="age">
 						<time datetime={post.data.pubDate.toISOString()}>{formatPubDate(post.data.pubDate)}</time>
-						{views.counts[post.id] > 0 && <span class="vw">{formatViews(views.counts[post.id])} views</span>}
+						{views.counts[post.id] > 0 && <span class="vw">{formatViews(views.counts[post.id])} {views.counts[post.id] === 1 ? 'view' : 'views'}</span>}
 					</div>
 				</a>
 			))}
