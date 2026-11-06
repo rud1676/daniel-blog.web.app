@@ -6,22 +6,37 @@ import type { Layer } from '../lib/layers';
 /**
  * 홈 히어로 (blog-design-2 A안): oh-my-zsh 터미널에서 친 `whoami` + `git log --oneline`.
  * git log는 이 레포의 실제 기록 — 빌드 때 src/lib/gitlog.ts 가 만든다. CSS만, JS 0.
- * PC 8줄, 모바일(≤720px) 6줄.
+ * 평소 4줄. 왼쪽 위 신호등은 진짜 버튼이다 (JS 0 — 체크박스 + :has()) (2026-11-06):
+ *   🔴 닫기 = 창이 줄며 사라지고 `[프로세스 완료됨] · 다시 열기` 한 줄만 남는다
+ *   🟡 최소화 = 제목 줄만 남기고 접힌다 (다시 누르면 펼침)
+ *   🟢 최대화 = 창이 화면 폭으로 커지며 git log가 MAX줄까지 펼쳐진다
+ * 상태는 새로고침하면 처음으로 돌아온다.
  */
 interface Props {
 	log: GitLog;
 }
 
 const { log } = Astro.props;
-const SHOW = 8;
+const SHOW = 4;
+const MAX = 12;
 const lines = log.lines.slice(0, SHOW);
+const extra = log.lines.slice(SHOW, MAX);
+const maxN = SHOW + extra.length;
 const heroLayers: Layer[] = ['front', 'server', 'infra', 'db', 'ai'];
 const kindClass = { post: 'p', fix: 'f', site: 's', infra: 'i' } as const;
 ---
 
+<div class="win">
 <section class="z" aria-label="소개">
-	<div class="zb" aria-hidden="true"><i></i><i></i><i></i><span>daniel-blog — zsh</span><span class="zr">oh-my-zsh · robbyrussell</span></div>
-	<div class="body">
+	<div class="zb">
+		<span class="lights">
+			<input type="checkbox" class="tl c" aria-label="터미널 닫기" id="hero-close" />
+			<input type="checkbox" class="tl m" aria-label="터미널 최소화" />
+			<input type="checkbox" class="tl x" aria-label="터미널 최대화 — git log 더 보기" />
+		</span>
+		<span aria-hidden="true">daniel-blog — zsh</span><span class="zr" aria-hidden="true">oh-my-zsh · robbyrussell</span>
+	</div>
+	<div class="fold"><div class="body">
 		<p><span class="arw">➜</span> <span class="cwd">~</span> whoami</p>
 		<p><b class="nm">Daniel</b> — 인프라를 주로 다루는, 레이어를 넘나드는 개발자</p>
 		<p class="dim ind">
@@ -31,7 +46,7 @@ const kindClass = { post: 'p', fix: 'f', site: 's', infra: 'i' } as const;
 			lines.length > 0 && (
 				<>
 					<p class="gap">
-						<span class="arw">➜</span> <span class="cwd">daniel-blog</span> <span class="gb">git:(<span class="br">{log.branch}</span>)</span> git log --oneline --date=short -{SHOW}
+						<span class="arw">➜</span> <span class="cwd">daniel-blog</span> <span class="gb">git:(<span class="br">{log.branch}</span>)</span> git log --oneline --date=short -<span class="n4">{SHOW}</span><span class="nx">{maxN}</span>
 					</p>
 					<ol class="gl" data-live-sha={lines[0].refs?.live ? log.headSha : undefined} data-live-tag={log.liveTag ?? undefined}>
 						{lines.map((l) => (
@@ -59,6 +74,34 @@ const kindClass = { post: 'p', fix: 'f', site: 's', infra: 'i' } as const;
 							</li>
 						))}
 					</ol>
+					{extra.length > 0 && (
+						<div class="ext"><ol class="gl" start={SHOW + 1}>
+						{extra.map((l) => (
+							<li>
+								<span class="g" aria-hidden="true">*</span> <span class="hs">{l.short}</span> <time class="dt" datetime={l.date}>{l.date}</time>{' '}
+								{l.refs && (
+									<>
+										<span class="rf">
+											(<span class="hd">{l.refs.head}</span>
+											{l.refs.live && (
+												<>
+													, <span class="tgl">tag: live</span>
+												</>
+											)}
+											)
+										</span>{' '}
+									</>
+								)}
+								<span class:list={['ty', kindClass[l.kind]]}>{l.kind}</span>{' '}
+								{l.href.startsWith('/') ? (
+									<a href={l.href} class="post">{l.text}</a>
+								) : (
+									<a href={l.href} class="cm" target="_blank" rel="noopener">{l.text}</a>
+								)}
+							</li>
+						))}
+						</ol></div>
+					)}
 					<p class="dim ind">
 						… <a href={`${REPO_URL}/commits/main`} class="more" target="_blank" rel="noopener">git log --all 전체 보기 →</a>
 					</p>
@@ -68,12 +111,13 @@ const kindClass = { post: 'p', fix: 'f', site: 's', infra: 'i' } as const;
 		<p class="gap">
 			<span class="arw">➜</span> <span class="cwd">daniel-blog</span> <span class="gb">git:(<span class="br">{log.branch}</span>)</span> <span class="cur" aria-hidden="true">▌</span>
 		</p>
-	</div>
+	</div></div>
 </section>
+<p class="done dim"><span class="arw">➜</span> [프로세스 완료됨] · <label for="hero-close" class="reopen">다시 열기</label></p>
+</div>
 
 <style>
 	.z {
-		margin: 0 0 28px;
 		overflow: hidden;
 		border: 1px solid var(--line);
 		border-radius: 8px;
@@ -89,13 +133,7 @@ const kindClass = { post: 'p', fix: 'f', site: 's', infra: 'i' } as const;
 		color: var(--dim);
 		font: 12px var(--mono);
 	}
-	.zb i {
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		background: var(--dot);
-	}
-	.zb span {
+	.zb > span:not(.lights) {
 		margin-left: 10px;
 	}
 	.zb .zr {
@@ -190,14 +228,182 @@ const kindClass = { post: 'p', fix: 'f', site: 's', infra: 'i' } as const;
 			opacity: 0;
 		}
 	}
+
+	/* ── 창 신호등 (JS 0: 체크박스 + :has()) ── */
+	.win {
+		--ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+		display: grid;
+		grid-template-rows: 1fr;
+		margin: 0 0 28px;
+		transition:
+			grid-template-rows 0.35s var(--ease) 0.15s,
+			margin 0.45s var(--ease);
+	}
+	.win > .z {
+		min-height: 0;
+		margin: 0;
+		transform-origin: 50% 0;
+		transition:
+			transform 0.25s var(--ease),
+			opacity 0.2s ease,
+			box-shadow 0.45s var(--ease);
+	}
+	.lights {
+		display: inline-flex;
+		gap: 8px;
+	}
+	.tl {
+		appearance: none;
+		display: grid;
+		place-items: center;
+		width: 12px;
+		height: 12px;
+		margin: 0;
+		border-radius: 50%;
+		background: var(--dot);
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	/* 마우스를 올리면 macOS처럼 색 + 기호 */
+	.lights:hover .c,
+	.tl.c:focus-visible {
+		background: #ff5f57;
+	}
+	.lights:hover .m,
+	.tl.m:focus-visible {
+		background: #febc2e;
+	}
+	.lights:hover .x,
+	.tl.x:focus-visible {
+		background: #28c840;
+	}
+	.tl::after {
+		color: rgb(0 0 0 / 0.55);
+		font: 700 9px/1 var(--sans);
+		opacity: 0;
+	}
+	.lights:hover .tl::after,
+	.tl:focus-visible::after {
+		opacity: 1;
+	}
+	.tl.c::after {
+		content: '×';
+		font-size: 11px;
+	}
+	.tl.m::after {
+		content: '−';
+		font-size: 11px;
+	}
+	.tl.x::after {
+		content: '+';
+		font-size: 11px;
+	}
+	.tl:focus-visible {
+		outline: 2px solid var(--acc);
+		outline-offset: 2px;
+	}
+	/* 접히는 칸: 0fr ↔ 1fr로 높이를 애니메이션 */
+	.fold,
+	.ext {
+		display: grid;
+		grid-template-rows: 1fr;
+		transition: grid-template-rows 0.4s var(--ease);
+	}
+	.fold > .body,
+	.ext > ol {
+		min-height: 0;
+		overflow: hidden;
+	}
+	.ext {
+		grid-template-rows: 0fr;
+	}
+	.nx {
+		display: none;
+	}
+
+	/* 🟡 최소화 — 본문이 아래에서 위로 빨려 들어가듯 접힌다 */
+	.body {
+		transform-origin: 50% 0;
+		transition:
+			transform 0.4s var(--ease),
+			opacity 0.3s ease;
+	}
+	.win:has(.m:checked) .fold {
+		grid-template-rows: 0fr;
+	}
+	.win:has(.m:checked) .body {
+		transform: scaleY(0.6) scaleX(0.92);
+		opacity: 0;
+	}
+	.win:has(.m:checked) .zb {
+		border-bottom-color: transparent;
+	}
+
+	/* 🟢 최대화 — 창이 화면 폭으로 커지고 git log가 더 펼쳐진다 */
+	.win:has(.x:checked) {
+		margin-inline: min(0px, calc(50% - 50vw + 24px));
+	}
+	.win:has(.x:checked) > .z {
+		box-shadow: 0 18px 50px -20px rgb(0 0 0 / 0.35);
+	}
+	.win:has(.x:checked) .ext {
+		grid-template-rows: 1fr;
+	}
+	.win:has(.x:checked) .n4 {
+		display: none;
+	}
+	.win:has(.x:checked) .nx {
+		display: inline;
+	}
+
+	/* 🔴 닫기 — 살짝 줄며 사라진 뒤 자리를 접는다 */
+	.done {
+		display: none;
+		margin: 0 0 28px;
+		font: 13px var(--mono);
+	}
+	.reopen {
+		color: var(--acc);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		cursor: pointer;
+	}
+	.win:has(.c:checked) {
+		grid-template-rows: 0fr;
+		margin-bottom: 0;
+	}
+	.win:has(.c:checked) > .z {
+		transform: scale(0.9);
+		opacity: 0;
+		pointer-events: none;
+	}
+	.win:has(.c:checked) .done {
+		display: block;
+		animation: fadein 0.3s ease 0.4s both;
+	}
+	@keyframes fadein {
+		from {
+			opacity: 0;
+		}
+	}
 	@media (prefers-reduced-motion: reduce) {
 		.cur {
 			animation: none;
 		}
+		.win,
+		.win *,
+		.done {
+			transition: none !important;
+			animation: none !important;
+		}
 	}
 	@media (max-width: 720px) {
-		.z {
+		.win {
 			margin: 0 0 20px;
+		}
+		/* 모바일은 화면 폭이 이미 가득 — 최대화는 줄만 더 펼친다 */
+		.win:has(.x:checked) {
+			margin-inline: 0;
 		}
 		.zr {
 			display: none;
@@ -206,10 +412,6 @@ const kindClass = { post: 'p', fix: 'f', site: 's', infra: 'i' } as const;
 			padding: 14px;
 			font-size: 12px;
 			line-height: 1.7;
-		}
-		/* 모바일은 6줄 */
-		li:nth-child(n + 7) {
-			display: none;
 		}
 	}
 </style>
