@@ -8,21 +8,25 @@ import { el, human, layerSpan, link, mmdd, span, type Part } from './ui';
 
 export type Cmd = (args: string[], sh: Shell) => void | Promise<void>;
 
-/** help 표 한 줄 = 명령 한 묶음 */
+/** help 표 한 줄 = 명령 한 묶음. 명령 → 단축키 순으로 묶음을 나눠 보여 준다 (D19) */
 const HELP: Array<[Part, string]> = [
 	['ls [-l] [-a] · pwd · tree', '~/<카테고리>/<글>.md — -l 레이어·날짜·제목, -a는 . ..'],
 	['cd ./<폴더> · cd ..', '폴더 이동 (상대 경로만)'],
 	['cat <글>.md', '원문 마크다운 그대로'],
 	['glow <글>.md', '렌더링해서 읽기 · q 닫기'],
-	['open <글>.md | /about | /posts', '페이지로 열기'],
+	['vim <글>.md', '원문을 vim으로 (읽기 전용) · :q 닫기'],
+	['open <글>.md', '페이지로 열기'],
 	['kubectx [<레이어> | -]', '레이어 컨텍스트 — ls·tree가 그 레이어만'],
-	['neofetch · top · netstat · ping', '이 브라우저·이 탭의 실제 값 (어디로도 보내지 않는다)'],
-	['uname · uptime · date · cal · df -h', '못 읽는 값은 not supported'],
-	['git log [-n N]', '이 블로그의 변경 이력'],
-	['theme dark | light · clear', '테마 · 화면 지우기 (Ctrl+L · ⌘K)'],
+	['top · netstat · uname · uptime', '이 브라우저·이 탭의 실제 값 (어디로도 보내지 않는다)'],
+	['date · cal · df -h', '못 읽는 값은 not supported'],
+	['theme dark | light · clear', '테마 · 화면 지우기'],
+	['history', '친 명령 기록 (이 페이지에서만)'],
+];
+const KEYS: Array<[Part, string]> = [
 	['Tab · Tab Tab', '명령·파일·폴더·레이어 완성 · 후보 목록'],
-	['Ctrl+U · Ctrl+L · Ctrl+C', '줄 지우기 · 화면 지우기 · 멈춤'],
-	['↑↓ · Ctrl+R · history · !!', '기록 (이 페이지에서만)'],
+	['↑↓ · Ctrl+R · !!', '기록 넘기기 · 검색 · 직전 명령'],
+	['Ctrl+U · Ctrl+C', '줄 지우기 · 멈춤'],
+	['Ctrl+L', '화면 지우기'],
 ];
 
 /** Tab 완성 — 명령 이름 후보 (help에 보이는 명령만. 재미 반응은 숨은 명령이라 뺀다) */
@@ -34,22 +38,20 @@ export const COMMAND_NAMES = [
 	'dagent',
 	'date',
 	'df',
-	'git',
 	'glow',
 	'help',
 	'history',
 	'kubectx',
 	'ls',
-	'neofetch',
 	'netstat',
 	'open',
-	'ping',
 	'pwd',
 	'theme',
 	'top',
 	'tree',
 	'uname',
 	'uptime',
+	'vim',
 ];
 /** Tab 완성 — 명령 뒤 인자 종류 */
 export const COMPLETE: Record<string, 'dir' | 'path' | 'layer'> = {
@@ -75,8 +77,6 @@ export const COMPLETE: Record<string, 'dir' | 'path' | 'layer'> = {
 
 /** 페이지로 열 수 있는 주소. ~ = 홈. /projects는 입구를 숨겨 둔 상태라 뺀다 */
 const PAGES = ['/', '/posts', '/about', '/cli'];
-
-type GitLine = { short: string; date: string; kind: string; text: string; href: string };
 
 const err = (sh: Shell, text: string) => sh.term.print(span('err', text));
 export const pageOf = (p: PostMeta) => `/posts/${p.slug}/`;
@@ -134,6 +134,7 @@ function lsRow(perm: string, group: Part, size: string, date: string, name: Part
 
 function layerList(layers: string[]): DocumentFragment {
 	const f = document.createDocumentFragment();
+	if (!layers.length) f.append(span('dim', '-')); // 레이어 없는 카테고리(study 등) — 그룹 칸을 비우지 않는다
 	layers.forEach((l, i) => f.append(...(i ? [',', layerSpan(l)] : [layerSpan(l)])));
 	return f;
 }
@@ -201,10 +202,11 @@ function ls(args: string[], sh: Shell) {
 
 /** 원문 캐시 (이 페이지 안에서만) */
 const rawCache = new Map<string, Promise<string>>();
-function fetchRaw(slug: string): Promise<string> {
+export function fetchRaw(slug: string): Promise<string> {
 	let p = rawCache.get(slug);
 	if (!p) {
-		p = fetch(`/posts/${slug}.md`).then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))));
+		// no-cache = 매번 etag로 확인 (304면 본문 없이 끝난다). 브라우저에 예전 404가 남아 있어도 다시 묻는다
+		p = fetch(`/posts/${slug}.md`, { cache: 'no-cache' }).then((r) => (r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))));
 		p.catch(() => rawCache.delete(slug)); // 실패는 캐시하지 않는다
 		rawCache.set(slug, p);
 	}
@@ -219,7 +221,14 @@ async function cat(args: string[], sh: Shell) {
 	if (!hit.file) return void err(sh, `cat: ${path}: Is a directory`);
 	const post = hit.file;
 
-	const lines = (await fetchRaw(post.slug)).replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n');
+	let raw: string;
+	try {
+		raw = await fetchRaw(post.slug);
+	} catch (e) {
+		// 왜 실패했는지 한 줄 (HTTP 상태 · 네트워크 오류) — 원인을 화면만 보고 알 수 있게
+		return void sh.term.print(span('err', `cat: ${path}: 불러오지 못했어요 (${e instanceof Error ? e.message : String(e)})`), span('dim', ' — open으로 페이지 열기'));
+	}
+	const lines = raw.replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n');
 	// 줄을 한 번에 붙인다 (큰 글도 스크롤 한 번). frontmatter 안의 `key:`만 색을 입힌다
 	const frag = document.createDocumentFragment();
 	const inFront = lines[0] === '---';
@@ -316,14 +325,25 @@ const editor = (cmd: string): Cmd => (args, sh) => {
 	sh.term.print(span('err', `${cmd}: read-only file system`), file ? span('dim', ` — glow ${file}로 읽기`) : null);
 };
 
+/** vi · vim · nvim = 읽기 전용으로 원문 열기 (D21) */
+const vim = (cmd: string): Cmd => async (args, sh) => {
+	const path = args.find((a) => !a.startsWith('-'));
+	if (!path) return void err(sh, `usage: ${cmd} <글>.md  (읽기 전용)`);
+	const hit = sh.fs.resolve(path);
+	if (typeof hit === 'string') return void err(sh, fsError(cmd, path, hit));
+	if (!hit.file) return void err(sh, `"${path}" is a directory`);
+	const { runVim } = await import('./vim');
+	await runVim(sh, hit.file, fileName(hit.file), cmd);
+};
+
 const FUN: Record<string, Cmd> = {
 	sudo: (_a, sh) => void err(sh, 'daniel is not in the sudoers file. This incident will be reported.'),
 	whoami: (_a, sh) => void sh.term.print('guest', span('dim', '  # 여기 주인은 daniel · open /about')),
 	exit: (_a, sh) => void sh.term.print(span('dim', 'logout — 나가려면 위 메뉴를 눌러 주세요')),
 	logout: (_a, sh) => void sh.term.print(span('dim', 'logout — 나가려면 위 메뉴를 눌러 주세요')),
-	vi: editor('vi'),
-	vim: editor('vim'),
-	nvim: editor('nvim'),
+	vi: vim('vi'),
+	vim: vim('vim'),
+	nvim: vim('nvim'),
 	nano: editor('nano'),
 	...Object.fromEntries(Object.keys(WRITE).map((c) => [c, writeCmd(c)])),
 };
@@ -341,8 +361,19 @@ export function redirect(line: string, sh: Shell): boolean {
 
 export const COMMANDS: Record<string, Cmd> = {
 	help(_args, sh) {
-		for (const [usage, desc] of HELP) sh.term.block(el('div', { class: 'hl' }, el('span', {}, usage), span('dim', desc)));
-		sh.term.block(el('div', { class: 'hl' }, el('span', {}, span('hi', 'dagent'), ' [--post <slug>]'), span('dim', 'AI 챗봇 실행 (나가기: /exit)')));
+		// 한 그리드에 모든 줄 — 왼쪽 칸은 가장 긴 명령만큼 (줄넘김 없이)
+		const rows = (xs: Array<[Part, string]>) => xs.flatMap(([usage, desc]) => [el('span', { class: 'u' }, usage), span('dim', desc)]);
+		sh.term.block(
+			el(
+				'div',
+				{ class: 'hl' },
+				...rows(HELP),
+				el('span', { class: 'u' }, span('hi', 'dagent'), ' [--post <slug>]'),
+				span('dim', 'AI 챗봇 실행 (나가기: /exit)'),
+				span('hh dim', '단축키'),
+				...rows(KEYS),
+			),
+		);
 	},
 
 	ls,
@@ -409,24 +440,6 @@ export const COMMANDS: Record<string, Cmd> = {
 		sh.setPrompt('sh');
 	},
 
-	async git(args, sh) {
-		if (args[0] !== 'log') return sh.notFound(['git', ...args]);
-		const n = Number(args.join(' ').match(/-n\s*(\d+)/)?.[1] ?? 10);
-		const data: { lines: GitLine[] } = await fetch('/gitlog.json').then((r) => r.json());
-		for (const l of data.lines.slice(0, Math.max(1, n)))
-			sh.term.print(
-				span('err', '*'),
-				' ',
-				el('span', { style: 'color: var(--tooling)' }, l.short),
-				' ',
-				span('dim', l.date),
-				' ',
-				span('pa', l.kind.padEnd(5)),
-				' ',
-				link(l.href, l.text),
-			);
-	},
-
 	theme(args, sh) {
 		const t = args[0];
 		const set = (window as unknown as { __setTheme?: (t: string) => void }).__setTheme;
@@ -441,11 +454,9 @@ export const COMMANDS: Record<string, Cmd> = {
 	},
 
 	// 시스템 명령 — sys.ts를 칠 때만 불러온다 (D6)
-	neofetch: async (_a, sh) => (await import('./sys')).neofetch(sh),
 	uname: async (a, sh) => (await import('./sys')).uname(sh, a),
 	top: async (_a, sh) => (await import('./sys')).top(sh),
 	netstat: async (_a, sh) => (await import('./sys')).netstat(sh),
-	ping: async (a, sh) => (await import('./sys')).ping(sh, a),
 	uptime: async (_a, sh) => (await import('./sys')).uptime(sh),
 	date: async (_a, sh) => (await import('./sys')).date(sh),
 	cal: async (_a, sh) => (await import('./sys')).cal(sh),

@@ -13,15 +13,27 @@ const GISCUS = {
 	category: 'Announcements',
 	categoryId: 'DIC_kwDOU-HlRs4DKR7J',
 };
+/** 제목·안내만 바꿔 다른 페이지(/cli 등)에도 단다. 토론은 pathname별로 따로 생긴다 */
+interface Props {
+	title?: string;
+	note?: string;
+	/** true면 버튼 없이, 화면 가까이 오면 바로 댓글 창을 불러온다 (/cli) */
+	auto?: boolean;
+}
+const { title = '댓글', note = 'GitHub 계정으로 남길 수 있어요. 누르기 전에는 외부 스크립트를 불러오지 않아요.', auto = false } = Astro.props;
 ---
 
-<section class="cm" aria-labelledby="comments" data-giscus={JSON.stringify(GISCUS)}>
-	<h2 id="comments" class="sec">댓글</h2>
+<section class="cm" aria-labelledby="comments" data-giscus={JSON.stringify(GISCUS)} data-auto={auto ? '' : undefined}>
+	<h2 id="comments" class="sec">{title}</h2>
 	<div class="slot">
-		<button type="button" class="load mono" data-giscus-load>
-			<span class="p">$</span> comments --load
-		</button>
-		<p class="dim note">GitHub 계정으로 남길 수 있어요. 누르기 전에는 외부 스크립트를 불러오지 않아요.</p>
+		{
+			!auto && (
+				<button type="button" class="load mono" data-giscus-load>
+					<span class="p">$</span> comments --load
+				</button>
+			)
+		}
+		{note && <p class="dim note">{note}</p>}
 		<noscript>
 			<p class="dim note">
 				JavaScript가 꺼져 있어요. <a href={`https://github.com/${GISCUS.repo}/discussions`}>GitHub Discussions</a>에서 볼 수 있어요.
@@ -31,7 +43,10 @@ const GISCUS = {
 </section>
 
 <script is:inline>
-	(function(){var b=document.querySelector('[data-giscus-load]');if(!b)return;var box=b.closest('[data-giscus]'),c=JSON.parse(box.dataset.giscus),d=document.documentElement,th=function(){return d.dataset.theme=='light'?'light':'dark'};b.addEventListener('click',function(){var s=document.createElement('script'),a={src:'https://giscus.app/client.js','data-repo':c.repo,'data-repo-id':c.repoId,'data-category':c.category,'data-category-id':c.categoryId,'data-mapping':'pathname','data-strict':'1','data-reactions-enabled':'1','data-emit-metadata':'0','data-input-position':'top','data-theme':th(),'data-lang':'ko','data-loading':'lazy',crossorigin:'anonymous',async:''};for(var k in a)s.setAttribute(k,a[k]);box.querySelector('.slot').replaceChildren(s)},{once:true});new MutationObserver(function(){var f=document.querySelector('iframe.giscus-frame');f&&f.contentWindow.postMessage({giscus:{setConfig:{theme:th()}}},'https://giscus.app')}).observe(d,{attributes:true,attributeFilter:['data-theme']})})();
+	(function(){var box=document.querySelector('[data-giscus]');if(!box)return;var c=JSON.parse(box.dataset.giscus),d=document.documentElement,th=function(){return d.dataset.theme=='light'?'light':'dark'},done=false;function load(){if(done)return;done=true;var s=document.createElement('script'),a={src:'https://giscus.app/client.js','data-repo':c.repo,'data-repo-id':c.repoId,'data-category':c.category,'data-category-id':c.categoryId,'data-mapping':'pathname','data-strict':'1','data-reactions-enabled':'1','data-emit-metadata':'0','data-input-position':'top','data-theme':th(),'data-lang':'ko','data-loading':'lazy',crossorigin:'anonymous',async:''};for(var k in a)s.setAttribute(k,a[k]);box.querySelector('.slot').replaceChildren(s)}
+	// auto: 화면 아래 300px 안으로 들어오면 불러온다 (그 전에는 외부 스크립트 0). 아니면 버튼을 눌러야 불러온다
+	if('auto' in box.dataset){if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){if(es.some(function(e){return e.isIntersecting})){io.disconnect();load()}},{rootMargin:'300px'});io.observe(box)}else load()}else{var b=box.querySelector('[data-giscus-load]');b&&b.addEventListener('click',load,{once:true})}
+	new MutationObserver(function(){var f=document.querySelector('iframe.giscus-frame');f&&f.contentWindow.postMessage({giscus:{setConfig:{theme:th()}}},'https://giscus.app')}).observe(d,{attributes:true,attributeFilter:['data-theme']})})();
 </script>
 
 <style>

@@ -21,6 +21,8 @@ export type PagerOpts = {
 	footer: Part;
 	/** 기본 키 말고 더 받을 키. 처리했으면 true */
 	onKey?: (e: KeyboardEvent) => boolean;
+	/** true면 onKey를 기본 키보다 먼저 부른다 — q·Esc를 직접 다루는 vim용 */
+	intercept?: boolean;
 	onClose?: () => void;
 	/** 스크롤 진행률을 오른쪽 아래에 */
 	progress?: boolean;
@@ -57,6 +59,7 @@ export function openPager(sh: Shell, opts: PagerOpts): Pager {
 	function onKey(e: KeyboardEvent) {
 		const page = scroller.clientHeight - LINE;
 		const by = (y: number) => scroller.scrollBy({ top: y });
+		if (opts.intercept && !(e.metaKey || e.altKey) && opts.onKey?.(e)) return void e.preventDefault();
 		if (e.key === 'q' || e.key === 'Escape' || (e.ctrlKey && e.key.toLowerCase() === 'c')) pager.close();
 		else if (e.key === 'j' || e.key === 'ArrowDown') by(LINE);
 		else if (e.key === 'k' || e.key === 'ArrowUp') by(-LINE);
@@ -64,7 +67,7 @@ export function openPager(sh: Shell, opts: PagerOpts): Pager {
 		else if (e.key === 'b' || e.key === 'PageUp') by(-page);
 		else if (e.key === 'g' || e.key === 'Home') scroller.scrollTop = 0;
 		else if (e.key === 'G' || e.key === 'End') scroller.scrollTop = scroller.scrollHeight;
-		else if (!(e.metaKey || e.altKey) && opts.onKey?.(e)) {
+		else if (!opts.intercept && !(e.metaKey || e.altKey) && opts.onKey?.(e)) {
 			// 처리됨
 		} else return; // 그 밖의 키는 브라우저에 (Tab 이동 등)
 		e.preventDefault();

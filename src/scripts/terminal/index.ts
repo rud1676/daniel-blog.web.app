@@ -25,7 +25,8 @@ export type Shell = {
 	/** 'sh'면 `(ctx) ~/work $`, 'agent'면 `dagent ›`. cd·kubectx 뒤에도 'sh'로 불러 다시 그린다 */
 	setPrompt: (mode: 'sh' | 'agent') => void;
 	/** 한 줄 실행 — 입력창 Enter와 (이후 STEP의) 칩·링크가 같이 쓴다 */
-	run: (line: string) => Promise<void>;
+	/** record: false면 ↑·history에 남기지 않는다 (첫 화면의 자동 help) */
+	run: (line: string, opts?: { record?: boolean }) => Promise<void>;
 	notFound: (words: string[]) => void;
 	/** dagent 모드일 때 입력을 가로챈다. null이면 셸 */
 	handler: ((line: string) => void | Promise<void>) | null;
@@ -82,7 +83,7 @@ function start(root: HTMLElement) {
 		notFound(w) {
 			term.print(span('err', `zsh: command not found: ${w[0]}`), span('dim', ' — help로 명령어 보기'));
 		},
-		async run(typed) {
+		async run(typed, { record = true } = {}) {
 			if (shell.handler) {
 				history.push(typed);
 				return shell.handler(typed);
@@ -98,7 +99,7 @@ function start(root: HTMLElement) {
 				line = line.replaceAll('!!', last);
 				term.print(line);
 			}
-			history.push(line);
+			if (record) history.push(line);
 			if (redirect(line, shell)) return;
 			const [cmd, ...args] = line.split(/\s+/);
 			const fn = Object.hasOwn(COMMANDS, cmd) ? COMMANDS[cmd] : undefined;
@@ -110,6 +111,8 @@ function start(root: HTMLElement) {
 		},
 	};
 	shell.setPrompt('sh');
+	// 들어오면 help가 이미 쳐진 화면 — 무엇을 칠 수 있는지 먼저 보인다 (D19). 기록엔 안 남긴다
+	void shell.run('help', { record: false });
 
 	// 첫 줄: 지난 7일 dagent 집계. agent가 꺼져 있으면 줄 없이 지나간다 (빌드는 agent를 부르지 않는다)
 	void answered(term, agentUrl).then((up) => {

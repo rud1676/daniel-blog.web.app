@@ -23,7 +23,7 @@ export const layerSpan = (layer: string) => el('span', { style: `color: var(--${
 export function route(layers: string[]): DocumentFragment {
 	const f = document.createDocumentFragment();
 	layers.forEach((l, i) => {
-		if (i > 0) f.append(' → ');
+		if (i > 0) f.append(', ');
 		f.append(layerSpan(l));
 	});
 	return f;

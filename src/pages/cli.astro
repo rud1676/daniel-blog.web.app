@@ -2,12 +2,13 @@
 // /cli — 블로그를 명령어로 둘러보는 셸 + dagent(AI). JS는 이 페이지에서만 쓴다 (글 상세 예산과 무관).
 // 셸: src/scripts/terminal/index.ts(부팅) · fs.ts(홈 디렉터리) · commands.ts(명령) · dagent.ts(실행할 때 import()).
 // 레이어·카테고리 목록은 data-layers·data-categories로 넘긴다 — 터미널 TS에 다시 쓰지 않는다 (AGENTS.md 분류 규칙).
+import Comments from '../components/Comments.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { CATEGORIES } from '../lib/categories';
 import { getFirstCommitDate } from '../lib/gitlog';
 import { LAYERS } from '../lib/layers';
 
-// neofetch·uptime의 블로그 나이. git이 없으면 속성을 빼고 그 줄을 숨긴다
+// uptime의 블로그 나이. git이 없으면 속성을 빼고 그 줄을 숨긴다
 const born = getFirstCommitDate();
 ---
 
@@ -17,7 +18,7 @@ const born = getFirstCommitDate();
 		<div class="zb">
 			<span class="led" data-led aria-hidden="true"></span><b>daniel@blog</b>
 			<span class="dim" data-mode> sh · help로 명령어 보기</span>
-			<span class="zr">⌘K 지우기 · ↑ 기록</span>
+			<span class="zr">↑ 기록</span>
 		</div>
 		<div class="out" data-out role="log" aria-live="polite">
 			<p class="dim">Daniel blog shell — <b class="hi">ls</b>로 글 폴더를, <b class="hi">help</b>로 명령어를 볼 수 있어요.</p>
@@ -33,6 +34,8 @@ const born = getFirstCommitDate();
 			{['help', 'ls', 'cd ..', 'kubectx', 'dagent'].map((c) => <button type="button" data-cmd={c}>{c}</button>)}
 		</div>
 	</section>
+	<!-- 셸 기능에 대한 댓글 — 글 댓글과 같은 giscus, 토론은 /cli 하나. 버튼 없이 스크롤하면 바로 열린다 (D20) -->
+	<Comments title="댓글 목록" note="" auto />
 </BaseLayout>
 
 <script>
@@ -125,11 +128,19 @@ const born = getFirstCommitDate();
 		color: var(--body);
 		font-family: var(--sans);
 	}
+	/* help: 한 그리드 — 왼쪽 칸 = 가장 긴 명령 폭 (줄넘김 없이) */
 	.out :global(.hl) {
 		display: grid;
-		grid-template-columns: minmax(0, 28ch) 1fr;
-		gap: 0 2ch;
+		grid-template-columns: max-content 1fr;
+		gap: 0 3ch;
 		padding-left: 2ch;
+	}
+	.out :global(.hl > .u) {
+		white-space: nowrap;
+	}
+	.out :global(.hl > .hh) {
+		grid-column: 1 / -1;
+		margin-top: 0.8em;
 	}
 	/* ls -l: 권한 · 소유자 · 그룹(=레이어) · 크기 · 날짜 · 이름 # 제목 */
 	.out :global(.ls) {
@@ -218,26 +229,6 @@ const born = getFirstCommitDate();
 	/* 시스템 명령 (sys.ts) */
 	.out :global(.ns) {
 		color: var(--warn);
-	}
-	.out :global(.neo) {
-		display: flex;
-		gap: 3ch;
-		align-items: flex-start;
-	}
-	.out :global(.neo .logo) {
-		margin: 0;
-		color: var(--acc);
-		font: inherit;
-	}
-	.out :global(.sws) {
-		margin-top: 0.4em;
-	}
-	.out :global(.sw) {
-		display: inline-block;
-		width: 2.2ch;
-		height: 1em;
-		margin-right: 2px;
-		vertical-align: middle;
 	}
 	.out :global(.ns-row) {
 		display: grid;
@@ -344,6 +335,40 @@ const born = getFirstCommitDate();
 		overflow-y: auto;
 		outline: 0;
 		background: var(--bg);
+	}
+	/* vim — 줄 번호 칸 + 원문 (D21) */
+	.alt :global(.vbody) {
+		position: relative;
+		padding: 8px 0 14px;
+		color: var(--body);
+	}
+	.alt :global(.vl) {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 0 1.5ch;
+		margin: 0;
+		padding: 0 14px;
+	}
+	.alt :global(.vn) {
+		color: var(--dim);
+		opacity: 0.6;
+		text-align: right;
+		white-space: pre;
+		user-select: none;
+	}
+	.alt :global(.vt) {
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+	.alt :global(.vtil .vn) {
+		color: var(--acc);
+	}
+	.alt :global(.vh) {
+		color: var(--acc);
+		font-weight: 700;
+	}
+	.alt :global(.vcmd) {
+		white-space: pre;
 	}
 	/* glow 본문 — 글 상세와 같은 HTML, 색만 터미널 톤 */
 	.alt :global(.gbody) {
@@ -459,6 +484,9 @@ const born = getFirstCommitDate();
 		.out :global(.hl) {
 			grid-template-columns: 1fr;
 		}
+		.out :global(.hl > .u:not(:first-child)) {
+			margin-top: 0.4em;
+		}
 		/* 모바일 ls -l: 파일 이름과 제목만 */
 		.out :global(.ls) {
 			grid-template-columns: 1fr;
@@ -477,9 +505,6 @@ const born = getFirstCommitDate();
 			display: flex;
 		}
 		.z:global(.alt-on) .chips {
-			display: none;
-		}
-		.out :global(.neo .logo) {
 			display: none;
 		}
 		.out :global(.ns-row) {

@@ -2,7 +2,7 @@
  * 입력창 키 — Tab 완성 · Ctrl+U/L/C/R · ↑↓ 기록 · Esc. (K17)
  * 빈 입력의 Tab은 막지 않는다 — 키보드 사용자가 입력창에 갇히지 않게 (D10).
  * Ctrl 계열은 `ctrlKey && !metaKey`로만 잡는다. Mac의 ⌘ 단축키와 겹치지 않는다.
- * Windows/Linux에서 Ctrl+U(소스 보기)·Ctrl+L(주소창)은 브라우저가 먼저 잡을 수 있다 → help에 clear·⌘K도 같이 안내한다.
+ * Windows/Linux에서 Ctrl+U(소스 보기)·Ctrl+L(주소창)은 브라우저가 먼저 잡을 수 있다 → help에 clear 명령도 같이 안내한다.
  */
 import { COMMAND_NAMES, COMPLETE } from './commands';
 import type { Shell } from './index';
@@ -178,14 +178,5 @@ export function attachKeys(sh: Shell) {
 			cursor = Math.max(0, Math.min(h.length, cursor + (e.key === 'ArrowUp' ? -1 : 1)));
 			input.value = h[cursor] ?? '';
 		} else if (e.key === 'Escape') sh.abort?.();
-	});
-
-	// ⌘K는 페이지 어디서든 화면 지우기 (Ctrl+K도 — 브라우저 검색창보다 먼저 잡히는 경우만)
-	document.addEventListener('keydown', (e) => {
-		if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-			e.preventDefault();
-			term.clear();
-			input.focus();
-		}
 	});
 }

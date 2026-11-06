@@ -64,7 +64,7 @@ export async function runGlow(sh: Shell, post: PostMeta, label: string) {
 		'header',
 		{ class: 'ghead' },
 		el('h1', {}, span('gh', '# '), post.title),
-		el('p', { class: 'gmeta' }, `${post.category} · `, route(post.layers), ` · ${ymd(post.pubDate)}`),
+		el('p', { class: 'gmeta' }, `${post.category} · `, ...(post.layers.length ? [route(post.layers), ' · '] : []), ymd(post.pubDate)),
 		post.stance && el('p', { class: 'gmeta' }, span('pa', 'stance: '), post.stance),
 		post.updatedReason && post.updatedDate && el('p', { class: 'gmeta' }, span('warn', `updated ${ymd(post.updatedDate)} — ${post.updatedReason}`)),
 	);

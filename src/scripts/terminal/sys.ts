@@ -1,9 +1,9 @@
 /**
- * 시스템 명령 — neofetch · uname · top · netstat · ping · uptime · date · cal · df. 칠 때만 import()로 불러온다 (D6).
+ * 시스템 명령 — uname · top · netstat · uptime · date · cal · df. 칠 때만 import()로 불러온다 (D6).
  * 값은 전부 방문자 브라우저·이 탭의 실제 값이고, 못 읽으면 `not supported`로 보인다 (K16). 지어낸 값은 없다.
  *
  * 전송 금지 (D7): 여기서 읽은 값은 화면에만 그린다. 어떤 요청에도 넣지 않는다.
- * 이 파일의 fetch는 ping의 같은 출처 HEAD(/favicon.ico) 하나뿐이다 — 리뷰 때 `fetch(` 개수를 센다.
+ * 이 파일에는 fetch가 없다 — 리뷰 때 `fetch(` 개수(0)를 센다. (ping·neofetch는 2026-11-06에 뺐다, D19)
  */
 import { relPath, runLink, pageOf } from './commands';
 import type { PostMeta } from './fs';
@@ -103,40 +103,7 @@ const blogDays = (born: string) => Math.max(0, Math.floor((Date.now() - Date.par
 const hhmm = (d = new Date(), sec = false) =>
 	d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', ...(sec ? { second: '2-digit' } : {}), hour12: false });
 
-/* ── neofetch · uname ───────────────────────────────── */
-
-const LOGO = ['┌───────────┐', '│ >_        │', '│           │', '│   daniel  │', '└───────────┘'].join('\n');
-
-export async function neofetch(sh: Shell) {
-	const p = await probe();
-	const kv = (k: string, v: Part) => el('p', {}, span('pa', `${k}:`), ' ', v);
-	const posts = sh.fs.all().length;
-	sh.term.block(
-		el(
-			'div',
-			{ class: 'neo' },
-			el('pre', { class: 'logo', 'aria-hidden': 'true' }, LOGO),
-			el(
-				'div',
-				{},
-				el('p', {}, el('b', { class: 'hi' }, 'guest'), '@', el('b', { class: 'hi' }, location.hostname)),
-				el('p', {}, '─'.repeat(18)),
-				kv('OS', p.os),
-				kv('Browser', `${p.browser} (${p.engine})`),
-				kv('Resolution', p.resolution),
-				kv('CPU', val(p.cores)),
-				kv('Memory', val(p.memory)),
-				kv('Battery', val(p.battery)),
-				kv('Theme', p.theme),
-				kv('Locale', p.locale),
-				kv('Uptime', `${dur(performance.now())} (this tab)`),
-				sh.born && kv('Blog', `${blogDays(sh.born)} days · ${posts} posts`),
-				// 색 띠 = 레이어 색 토큰 (목록은 data-layers에서)
-				el('p', { class: 'sws' }, ...sh.layers.map((l) => el('span', { class: 'sw', style: `background: var(--${l})`, title: l }))),
-			),
-		),
-	);
-}
+/* ── uname ────────────────────────────────────────── */
 
 export async function uname(sh: Shell, args: string[]) {
 	const p = await probe();
@@ -229,66 +196,6 @@ export function top(sh: Shell) {
 			clearInterval(iv);
 		},
 	});
-}
-
-/* ── ping ───────────────────────────────────────────── */
-
-/** 같은 출처에 작은 HEAD 요청 4번 (D8). 외부 주소로는 보내지 않는다 */
-export async function ping(sh: Shell, args: string[]) {
-	const host = args.find((a) => !a.startsWith('-'));
-	if (!host) return void err(sh, 'usage: ping <host>');
-	if (![location.hostname, 'kyungjin.dev', 'localhost'].includes(host)) return void err(sh, `ping: cannot resolve ${host}: Unknown host`);
-	const { term } = sh;
-	term.print(`PING ${host}: 56 data bytes`);
-
-	let stopped = false;
-	let req: AbortController | null = null;
-	let wake: (() => void) | null = null;
-	sh.abort = () => {
-		stopped = true;
-		req?.abort();
-		wake?.();
-	};
-	const times: number[] = [];
-	let sent = 0;
-	try {
-		for (let seq = 0; seq < 4 && !stopped; seq++) {
-			if (seq > 0) await new Promise<void>((r) => {
-				const t = setTimeout(r, 1000);
-				wake = () => {
-					clearTimeout(t);
-					r();
-				};
-			});
-			if (stopped) break;
-			sent++;
-			req = new AbortController();
-			const timer = setTimeout(() => req?.abort(), 2000);
-			const t0 = performance.now();
-			try {
-				await fetch(`/favicon.ico?ping=${seq}`, { method: 'HEAD', cache: 'no-store', signal: req.signal });
-				const ms = performance.now() - t0;
-				times.push(ms);
-				term.print(`64 bytes from ${host}: icmp_seq=${seq} time=${ms.toFixed(1)} ms`);
-			} catch {
-				if (stopped) break;
-				term.print(`Request timeout for icmp_seq ${seq}`);
-			} finally {
-				clearTimeout(timer);
-			}
-		}
-	} finally {
-		sh.abort = null;
-	}
-	if (stopped) term.print('^C');
-	term.print(`--- ${host} ping statistics ---`);
-	const loss = sent ? ((sent - times.length) / sent) * 100 : 0;
-	term.print(`${sent} packets transmitted, ${times.length} packets received, ${loss.toFixed(1)}% packet loss`);
-	if (times.length) {
-		const f = (n: number) => n.toFixed(1);
-		term.print(`round-trip min/avg/max = ${f(Math.min(...times))}/${f(times.reduce((a, b) => a + b, 0) / times.length)}/${f(Math.max(...times))} ms`);
-	}
-	term.print(span('dim', '# 실제로는 작은 HTTPS 요청의 왕복 시간 · Ctrl+C로 멈춤'));
 }
 
 /* ── uptime · date · cal · df ───────────────────────── */
