@@ -1,6 +1,6 @@
 // 사이트 전역 상수. 여기만 고치면 메타/RSS/푸터가 전부 따라간다.
 
-export const SITE_TITLE = 'Daniel';
+export const SITE_TITLE = '주경진 | Daniel-Joo';
 export const SITE_DESCRIPTION =
 	'인프라를 주로 다루는, 레이어를 넘나드는 개발자 Daniel의 기록. 고른 것보다 버린 것과 그 이유를 남긴다.';
 
