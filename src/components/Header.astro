@@ -15,8 +15,8 @@ const nav = [
 
 <header class="top">
 	<div class="wrap">
-		<a href="/" class="prompt" aria-label="홈"><span class="led" aria-hidden="true"></span>daniel@blog<b>:~</b>$</a>
-		<span class="ctx dim">ctx: infra-first</span>
+		<a href="/" class="prompt" aria-label="홈"><span class="led" aria-hidden="true"></span>daniel-joo@blog<b>:~</b>$</a>
+		<span class="motto dim"># 넓게 배우고, 본질을 파고듭니다</span>
 		<nav aria-label="주 메뉴">
 			{
 				nav.map(({ href, label, key }) => (
@@ -93,7 +93,16 @@ const nav = [
 		color: var(--hi);
 		font-weight: 600;
 	}
+	.motto {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		min-width: 0;
+	}
 	@media (max-width: 720px) {
+		.motto {
+			display: none;
+		}
 		.top .wrap {
 			flex-wrap: wrap;
 			row-gap: 6px;
@@ -101,9 +110,6 @@ const nav = [
 			padding-top: 8px;
 			padding-bottom: 8px;
 			font-size: 12px;
-		}
-		.ctx {
-			display: none;
 		}
 		nav {
 			flex-wrap: wrap;
