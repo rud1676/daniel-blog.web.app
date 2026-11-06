@@ -147,12 +147,10 @@ function listDir(sh: Shell, dir: string[], long: boolean, all: boolean) {
 	const files = dir.length === 1 ? fs.filesIn(dir[0]) : [];
 
 	if (!long) {
-		const names: Part[] = [
-			...(all ? [span('pa', '.'), span('pa', '..')] : []),
-			...subdirs.map((d) => span('pa', `${d}/`)),
-			...files.map((p) => fileLink(sh, p)),
-		];
+		const names: Part[] = [...(all ? [span('pa', '.'), span('pa', '..')] : []), ...subdirs.map((d) => span('pa', `${d}/`))];
 		if (names.length) term.print(...names.flatMap((n, i) => (i ? ['  ', n] : [n])));
+		// 파일은 한 줄에 하나 + 제목 — 이름은 slug(= 글 주소)로 두고, 무슨 글인지는 옆에서 읽힌다 (D18)
+		for (const p of files) term.print(fileLink(sh, p), span('dim ttl', `  # ${p.title}`));
 		return;
 	}
 
