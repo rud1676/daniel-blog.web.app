@@ -2,7 +2,7 @@
 
 export const SITE_TITLE = '주경진 | Daniel-Joo';
 export const SITE_DESCRIPTION =
-	'인프라를 주로 다루는, 레이어를 넘나드는 개발자 Daniel의 기록. 고른 것보다 버린 것과 그 이유를 남긴다.';
+	'개발자와 메이커의 중간 어딘가에서 빠르게 만들고, 본질적인 걸 파고드는 여정들을 모았습니다.';
 
 export const AUTHOR = 'Daniel';
 export const GITHUB_URL = 'https://github.com/rud1676';
