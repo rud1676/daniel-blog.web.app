@@ -60,6 +60,17 @@ export const COMPLETE: Record<string, 'dir' | 'path' | 'layer'> = {
 	glow: 'path',
 	open: 'path',
 	kubectx: 'layer',
+	// 못 쓰는 명령도 인자는 완성된다 — 진짜 셸처럼, 쳐 보고 막히는 맛
+	vi: 'path',
+	vim: 'path',
+	nvim: 'path',
+	nano: 'path',
+	rm: 'path',
+	rmdir: 'dir',
+	mv: 'path',
+	cp: 'path',
+	chmod: 'path',
+	chown: 'path',
 };
 
 /** 페이지로 열 수 있는 주소. ~ = 홈. /projects는 입구를 숨겨 둔 상태라 뺀다 */
