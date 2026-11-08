@@ -159,7 +159,7 @@ const tags = [...tagCount]
 		border-color: var(--acc);
 		color: var(--hi);
 	}
-	/* PostTable의 .tr { display: grid }가 hidden 속성을 덮어쓰므로 여기서 다시 숨긴다 */
+	/* PostTable의 .tr { display: flex }가 hidden 속성을 덮어쓰므로 여기서 다시 숨긴다 */
 	[data-results] :global(.tr[hidden]) {
 		display: none;
 	}

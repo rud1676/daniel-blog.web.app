@@ -26,7 +26,7 @@ const log = await getGitLog();
 
 	<section aria-labelledby="home-latest" class="block">
 		<h2 id="home-latest" class="sec">최근 글</h2>
-		<PostTable posts={latest} headless={pinned.length > 0} />
+		<PostTable posts={latest} />
 		{
 			posts.length > 0 && (
 				<p class="more">

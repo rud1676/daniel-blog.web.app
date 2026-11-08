@@ -1,151 +1,129 @@
 ---
+import { Image } from 'astro:assets';
 import { formatPubDate } from '../lib/age';
 import type { Post } from '../lib/posts';
 import { formatViews, getViews } from '../lib/views';
 import LayerRoute from './LayerRoute.astro';
 
 /**
- * 글 표: NAME / CATEGORY / LAYERS / STANCE / DATE(+ 아래 views). 행 전체가 글 링크다.
+ * 글 목록(리스트형, prd/post-list-simple B안): 라벨 줄(PINNED · 카테고리 / 레이어) → 제목 → 날짜 · views · #태그.
+ * heroImage가 있는 글만 오른쪽에 썸네일, 없으면 칸 자체를 안 그린다. 행 전체가 글 링크다.
+ * stance는 목록에 보이지 않는다(글 상단·검색 대상으로는 남는다).
  * views는 빌드 때 BigQuery에서 센 값(lib/views.ts) — 집계 안 한 빌드거나 0이면 안 보인다.
- * 홈·/posts·레이어 필터·글 끝 "같은 레이어 글"이 같이 쓴다. JS 0.
- * 720px 이하에선 카드형(제목·DATE / 레이어 / 관점)으로 다시 배치한다.
+ * 홈·/posts·필터·검색·글 끝 "같은 레이어 글"이 같이 쓴다. JS 0.
+ * 클래스 a.tr · .name · .tagline 은 src/scripts/search.ts가 찾는다.
  */
 interface Props {
 	posts: Post[];
 	/** 글이 없을 때 보일 문장 */
 	empty?: string;
-	/** 표 머리글(NAME LAYERS …)을 숨긴다 — 글 끝 관련 글처럼 문맥상 뻔할 때 */
-	headless?: boolean;
-	/** LAYERS 칸을 TAGS로 — 레이어를 달지 않는 카테고리(study) 탭에서만. 제목 아래 태그 줄은 중복이라 뺀다 */
-	tagColumn?: boolean;
 }
 
-const { posts, empty = '아직 발행한 글이 없다.', headless = false, tagColumn = false } = Astro.props;
+const { posts, empty = '아직 발행한 글이 없다.' } = Astro.props;
 const views = await getViews();
-const hasViews = views.updatedAt !== null;
 ---
 
 {
 	posts.length === 0 ? (
 		<p class="empty dim mono">{empty}</p>
 	) : (
-		<div class="tbl" role="list">
-			{!headless && (
-				<div class="tr th" aria-hidden="true">
-					<div>NAME</div>
-					<div>CATEGORY</div>
-					<div>{tagColumn ? 'TAGS' : 'LAYERS'}</div>
-					<div>STANCE</div>
-					<div class="age">DATE{hasViews && <span class="vw">VIEWS</span>}</div>
-				</div>
-			)}
-			{posts.map((post) => (
-				<a class="tr" href={`/posts/${post.id}/`} role="listitem">
-					<div class="name">
-						{post.data.pinned && <span class="pin">PINNED</span>}
-						{post.data.title}
-						{!tagColumn && post.data.tags.length > 0 && (
-							<small>{post.data.tags.slice(0, 2).map((tag) => `#${tag}`).join(' ')}</small>
-						)}
-					</div>
-					<div class="meta">
-						<div class="cat">{post.data.category}</div>
-						<div class="route">
-							{tagColumn ? (
-								<span class="tags">{post.data.tags.map((tag) => <span class="tg">#{tag}</span>)}</span>
-							) : (
-								post.data.layers && <LayerRoute layers={post.data.layers} />
-							)}
+		<div class="list" role="list">
+			{posts.map((post) => {
+				const n = views.counts[post.id] ?? 0;
+				return (
+					<a class="tr" href={`/posts/${post.id}/`} role="listitem">
+						<div class="txt">
+							<div class="lbl">
+								{post.data.pinned && <span class="pin">PINNED</span>}
+								<span class="cat">{post.data.category}</span>
+								{post.data.layers && (
+									<>
+										<span class="sl" aria-hidden="true">/</span>
+										<LayerRoute layers={post.data.layers} />
+									</>
+								)}
+							</div>
+							<div class="name">{post.data.title}</div>
+							<div class="sub">
+								<time datetime={post.data.pubDate.toISOString()}>{formatPubDate(post.data.pubDate)}</time>
+								{n > 0 && <span class="vw"> · {formatViews(n)} {n === 1 ? 'view' : 'views'}</span>}
+								{post.data.tags.length > 0 && (
+									<span class="tagline"> · {post.data.tags.slice(0, 2).map((tag) => `#${tag}`).join(' ')}</span>
+								)}
+							</div>
 						</div>
-					</div>
-					<div class="stance">{post.data.stance ?? post.data.description}</div>
-					<div class="age">
-						<time datetime={post.data.pubDate.toISOString()}>{formatPubDate(post.data.pubDate)}</time>
-						{views.counts[post.id] > 0 && <span class="vw">{formatViews(views.counts[post.id])} {views.counts[post.id] === 1 ? 'view' : 'views'}</span>}
-					</div>
-				</a>
-			))}
+						{post.data.heroImage && (
+							<Image class="thumb" src={post.data.heroImage} width={352} height={220} alt="" loading="lazy" />
+						)}
+					</a>
+				);
+			})}
 		</div>
 	)
 }
 
 <style>
-	/* PC: .meta는 상자 없이 칸 둘(CATEGORY · LAYERS)로 풀린다 */
-	.meta {
-		display: contents;
-	}
-	.cat {
-		color: var(--dim);
-		font: 13px/1.9 var(--mono);
-	}
-	.tbl {
+	.list {
 		border-top: 1px solid var(--line);
 	}
 	.tr {
-		display: grid;
-		grid-template-columns: minmax(0, 1.5fr) 72px 216px minmax(0, 1.4fr) 80px;
-		gap: 18px;
-		align-items: start;
-		padding: 16px 8px;
+		display: flex;
+		gap: 32px;
+		align-items: center;
+		padding: 22px 8px;
 		border-bottom: 1px solid var(--line);
-	}
-	.th {
-		padding: 8px;
-		color: var(--dim);
-		font: 12px var(--mono);
-		letter-spacing: 0.06em;
 	}
 	a.tr:hover {
 		background: var(--hover);
 	}
-	.name {
-		color: var(--hi);
-		font-weight: 600;
-		line-height: 1.5;
+	.txt {
+		flex: 1;
+		min-width: 0;
 	}
-	.name small {
-		display: block;
-		margin-top: 4px;
+	.lbl {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 4px 6px;
 		color: var(--dim);
-		font: 400 12px var(--mono);
+		font: 12px/1.6 var(--mono);
+	}
+	/* 라벨 줄에선 레이어 칩 테두리를 빼고 색 글자만 */
+	.lbl :global(.ly) {
+		padding: 0;
+		border: 0;
+	}
+	.lbl :global(.arr) {
+		margin: 0 4px 0 0;
+	}
+	.sl {
+		opacity: 0.6;
 	}
 	.pin {
-		margin-right: 8px;
 		padding: 0 5px;
 		border: 1px solid var(--acc);
 		border-radius: 3px;
 		color: var(--acc);
 		font: 400 11px var(--mono);
-		vertical-align: 2px;
 	}
-	.tags {
-		display: inline-flex;
-		flex-wrap: wrap;
-		gap: 4px 6px;
+	.name {
+		margin: 6px 0 10px;
+		color: var(--hi);
+		font-size: 20px;
+		font-weight: 700;
+		line-height: 1.4;
 	}
-	.tg {
-		padding: 1px 7px;
-		border: 1px solid var(--line);
-		border-radius: 3px;
-		color: var(--dim);
-		font: 12px/1.5 var(--mono);
-		white-space: nowrap;
-	}
-	.stance {
-		padding-left: 12px;
-		border-left: 2px solid var(--line);
-		color: var(--tx);
-		font-size: 14px;
-	}
-	.age {
+	.sub {
 		color: var(--dim);
 		font: 12px var(--mono);
-		text-align: right;
 	}
-	.vw {
-		display: block;
-		margin-top: 2px;
-		font-size: 11px;
+	.thumb {
+		flex: none;
+		width: 176px;
+		height: 110px;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		object-fit: cover;
 	}
 	.empty {
 		padding: 16px 8px;
@@ -154,30 +132,15 @@ const hasViews = views.updatedAt !== null;
 	}
 	@media (max-width: 720px) {
 		.tr {
-			grid-template-columns: 1fr 80px;
-			gap: 8px 10px;
-			padding: 16px 4px;
+			gap: 14px;
+			padding: 18px 4px;
 		}
-		.th {
-			display: none;
+		.name {
+			font-size: 17px;
 		}
-		/* 모바일: 둘째 줄에 카테고리 · 레이어 나란히 */
-		.meta {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 4px 10px;
-			align-items: center;
-			grid-column: 1 / 2;
-			grid-row: 2;
-		}
-		.stance {
-			grid-column: 1 / 3;
-			grid-row: 3;
-			font-size: 13px;
-		}
-		.age {
-			grid-column: 2;
-			grid-row: 1;
+		.thumb {
+			width: 96px;
+			height: 64px;
 		}
 	}
 </style>
