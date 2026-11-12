@@ -4,7 +4,6 @@ description: '건강 기록이 평문으로 쌓인 라이브 DB를 봉투 암호
 pubDate: '2026-11-04'
 category: work
 layers: [db, server, infra]
-stance: '운영 DB의 민감정보 암호화에서 어려운 건 알고리즘이 아니었다. 키 관리와, 라이브에서 되돌릴 수 있는 순서였다.'
 tags: ['encryption', 'migration', 'dual-write', 'backfill', 'kubernetes']
 draft: false
 ---

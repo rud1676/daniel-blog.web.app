@@ -2,7 +2,7 @@
 /*
   글 상세. 읽기 우선 — 콘솔 장식은 상단 메타 박스에만 쓰고, 본문은 산세리프 17px / 행간 1.95 / 폭 720px.
   JS: 테마 인라인 스크립트 + 목차 스크립트(toc.ts)뿐. 예산 ≤ 10kB는 scripts/check-js-budget.mjs가 빌드 후 잰다.
-  글 끝: "같은 레이어를 거친 글" + 댓글(giscus, 눌러야 불러옴). 수정 이력·저자 카드·이전/다음·질문하기 카드는 뺐다.
+  글 끝: "같은 레이어를 거친 글" + 댓글(giscus, 가까이 오면 바로 불러옴). 수정 이력·저자 카드·이전/다음·질문하기 카드는 뺐다.
 */
 import type { MarkdownHeading } from 'astro';
 import { Image } from 'astro:assets';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const { post, headings, related, minutes } = Astro.props;
-const { title, description, pubDate, updatedDate, heroImage, canonical, category, layers, stance, tags } = post.data;
+const { title, description, pubDate, updatedDate, heroImage, canonical, category, layers, tags } = post.data;
 
 /** 목차는 h2만. 2개 미만이면 목차를 아예 안 그린다. */
 const toc = headings.filter((h) => h.depth === 2);
@@ -84,14 +84,6 @@ const viewCount = views.counts[post.id];
 								) : (
 									<span class="vu">— 집계 전 (다음 06:00 빌드부터)</span>
 								)}
-							</div>
-						)
-					}
-					{
-						stance && (
-							<div class="st-row">
-								<b>STANCE</b>
-								<span class="st">{stance}</span>
 							</div>
 						)
 					}
@@ -221,17 +213,6 @@ const viewCount = views.counts[post.id];
 	}
 	.meta .vu {
 		color: var(--dim);
-	}
-	.st-row {
-		display: flex;
-		gap: 6px;
-	}
-	.st-row b {
-		flex: none;
-	}
-	.st {
-		color: var(--hi);
-		font: 14px/1.6 var(--sans);
 	}
 	.tags {
 		margin-top: 4px;

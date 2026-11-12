@@ -4,7 +4,6 @@ description: '"캐시 제외"라던 티켓을 열어 보니 압축 문제였고 
 pubDate: '2026-11-05'
 category: work
 layers: [infra, build, front]
-stance: '번들을 어디서 쪼개고 압축을 어디서 할지는 직접 잰 숫자와 팀이 정한 득실로 결정한다. 그 득실은 AI가 대신 정해 주지 않는다.'
 tags: ['code-splitting', 'vite', 'cloudfront', 'nginx', 'bundle']
 draft: true
 ---
