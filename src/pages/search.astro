@@ -1,5 +1,5 @@
 ---
-// /search — 글 검색. 제목·태그·stance만 찾는다(본문 X). JS는 이 페이지에서만 쓴다 (/cli와 같은 취급, JS 0 페이지 아님).
+// /search — 글 검색. 제목·태그·description만 찾는다(본문 X). JS는 이 페이지에서만 쓴다 (/cli와 같은 취급, JS 0 페이지 아님).
 // 발행 글 전체를 빌드 때 PostTable로 그려 두고(hidden), src/scripts/search.ts가 입력값으로 행을 숨기고 보인다.
 // 검색어는 주소 ?q= 에 남는다 → 새로고침·뒤로가기·공유에 유지, 태그 칩은 평범한 링크.
 // 기획: 워크스페이스 prd/blog-search · plan/blog-search-plan.md
@@ -12,11 +12,11 @@ const TAG_CHIPS = 8;
 
 const posts = await getPublishedPosts();
 
-// 검색 대상 텍스트: slug → 제목 · 전체 태그 · stance(없으면 description). 표엔 태그가 2개만 보여서 따로 넘긴다
+// 검색 대상 텍스트: slug → 제목 · 전체 태그 · description. 표엔 태그가 2개만 보여서 따로 넘긴다
 const index = Object.fromEntries(
 	posts.map((p) => [
 		`/posts/${p.id}/`,
-		[p.data.title, p.data.tags.map((t) => `#${t}`).join(' '), p.data.stance ?? p.data.description].join('\n'),
+		[p.data.title, p.data.tags.map((t) => `#${t}`).join(' '), p.data.description].join('\n'),
 	]),
 );
 
@@ -51,7 +51,7 @@ const tags = [...tagCount]
 	<noscript><p class="hint">검색은 JavaScript가 필요해요. 글 전체는 <a href="/posts">/posts</a>에서 볼 수 있어요.</p></noscript>
 
 	<div data-idle>
-		<p class="hint dim">제목 · 태그 · 한 줄 관점(stance)에서 찾아요. 본문은 검색하지 않아요.</p>
+		<p class="hint dim">제목 · 태그 · 글 요약에서 찾아요. 본문은 검색하지 않아요.</p>
 		{
 			tags.length > 0 && (
 				<>

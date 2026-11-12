@@ -10,7 +10,7 @@ export type PostMeta = {
 	title: string;
 	category: string;
 	layers: string[];
-	stance: string;
+	description: string;
 	pubDate: string;
 	updatedDate: string | null;
 	updatedReason: string | null;

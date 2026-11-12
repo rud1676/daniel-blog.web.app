@@ -21,8 +21,6 @@ const posts = defineCollection({
 				category: z.enum(CATEGORY_IDS),
 				/** 문제가 지나간 영역. 순서 = 흐름 (예: server → infra → db) */
 				layers: z.array(z.enum(LAYERS)).min(1).max(4).optional(),
-				/** 관점 한 줄. 없으면 목록에서 description을 대신 보여 준다 */
-				stance: z.string().max(120).optional(),
 				/** 홈 대표 글. 발행 글 중 최대 2편 (getPublishedPosts에서 검사) */
 				pinned: z.boolean().default(false),
 				tags: z.array(z.string()).default([]),

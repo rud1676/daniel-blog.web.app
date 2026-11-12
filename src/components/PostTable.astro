@@ -8,7 +8,7 @@ import LayerRoute from './LayerRoute.astro';
 /**
  * 글 목록(리스트형, prd/post-list-simple B안): 라벨 줄(PINNED · 카테고리 / 레이어) → 제목 → 날짜 · views · #태그.
  * heroImage가 있는 글만 오른쪽에 썸네일, 없으면 칸 자체를 안 그린다. 행 전체가 글 링크다.
- * stance는 목록에 보이지 않는다(글 상단·검색 대상으로는 남는다).
+ * description은 목록에 보이지 않는다(검색 대상으로는 쓴다).
  * views는 빌드 때 BigQuery에서 센 값(lib/views.ts) — 집계 안 한 빌드거나 0이면 안 보인다.
  * 홈·/posts·필터·검색·글 끝 "같은 레이어 글"이 같이 쓴다. JS 0.
  * 클래스 a.tr · .name · .tagline 은 src/scripts/search.ts가 찾는다.

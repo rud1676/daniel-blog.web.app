@@ -11,7 +11,7 @@ export const GET: APIRoute = async () => {
 			title: p.data.title,
 			category: p.data.category,
 			layers: p.data.layers ?? [],
-			stance: p.data.stance ?? p.data.description,
+			description: p.data.description,
 			pubDate: p.data.pubDate.toISOString(),
 			updatedDate: p.data.updatedDate?.toISOString() ?? null,
 			updatedReason: p.data.updatedReason ?? null,

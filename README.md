@@ -43,7 +43,6 @@ description: '검색 결과·OG 카드에 노출된다. 160자 이내.'
 pubDate: 'YYYY-MM-DD'
 layers: [server, infra, db]   # 문제가 지나간 영역, 순서 = 흐름. 1~4개
                               # front · server · infra · db · ai · build · tooling 중에서만
-stance: '이 기술을 나는 이렇게 본다 — 관점 한 줄 (120자 이내)'   # 없으면 description을 보여 준다
 pinned: true                  # 홈 대표 글. 발행 글 중 최대 2편
 # updatedDate: 'YYYY-MM-DD'   # 크게 고쳤을 때만
 # updatedReason: '무엇을 왜 정정했나 한 줄 (100자 이내)'   # 있으면 홈 Events에 Updated로 뜬다. updatedDate 필수

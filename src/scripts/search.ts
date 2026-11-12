@@ -1,6 +1,6 @@
 /**
  * /search — 빌드 때 그려 둔 전체 글 목록(PostTable)을 입력값으로 거른다.
- * - 대상: 제목 · 전체 태그 · stance (search.astro가 data-search-index JSON으로 넘긴다)
+ * - 대상: 제목 · 전체 태그 · description (search.astro가 data-search-index JSON으로 넘긴다)
  * - 매칭: 공백으로 나눈 단어가 모두 들어 있으면 맞음(AND), 대소문자 무시, 부분 일치
  * - 검색어는 주소 ?q= 에 남긴다. 입력 중엔 기록을 쌓지 않고 replaceState로 바꾼다
  * - Esc = 비우기. 맞은 글자는 목록에 보이는 텍스트(제목·태그 2개)에 <mark>
@@ -17,7 +17,7 @@ const indexEl = document.querySelector('[data-search-index]');
 if (form && input && idle && count && empty && emptyMsg && results && indexEl) {
 	const index: Record<string, string> = JSON.parse(indexEl.textContent || '{}');
 	const rows = [...results.querySelectorAll<HTMLAnchorElement>('a.tr')].map((row) => {
-		// 강조할 칸: 제목·태그 줄 (stance는 목록에 안 보여 검색만 된다). 원래 HTML을 기억해 두고 매번 거기서 다시 칠한다
+		// 강조할 칸: 제목·태그 줄 (description은 목록에 안 보여 검색만 된다). 원래 HTML을 기억해 두고 매번 거기서 다시 칠한다
 		const cells = [...row.querySelectorAll<HTMLElement>('.name, .tagline')];
 		return {
 			row,

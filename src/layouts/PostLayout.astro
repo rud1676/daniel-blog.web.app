@@ -1,6 +1,7 @@
 ---
 /*
-  글 상세. 읽기 우선 — 콘솔 장식은 상단 메타 박스에만 쓰고, 본문은 산세리프 17px / 행간 1.95 / 폭 720px.
+  글 상세. 읽기 우선 — 제목 아래는 `날짜 · 분량 · 카테고리` 한 줄만(박스 없음), 레이어·태그는 글 끝으로.
+  본문은 산세리프 17px / 행간 1.95 / 폭 720px.
   JS: 테마 인라인 스크립트 + 목차 스크립트(toc.ts)뿐. 예산 ≤ 10kB는 scripts/check-js-budget.mjs가 빌드 후 잰다.
   글 끝: "같은 레이어를 거친 글" + 댓글(giscus, 가까이 오면 바로 불러옴). 수정 이력·저자 카드·이전/다음·질문하기 카드는 뺐다.
 */
@@ -12,7 +13,6 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import LayerRoute from '../components/LayerRoute.astro';
 import PostTable from '../components/PostTable.astro';
-import { categoryOf } from '../lib/categories';
 import type { Post } from '../lib/posts';
 import { formatViews, getViews } from '../lib/views';
 
@@ -30,7 +30,7 @@ const { title, description, pubDate, updatedDate, heroImage, canonical, category
 const toc = headings.filter((h) => h.depth === 2);
 const showToc = toc.length >= 2;
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
-/** 조회수 — 빌드 때 BigQuery에서 센 값. 집계를 안 하는 빌드(로컬 기본)면 줄 자체를 숨긴다 */
+/** 조회수 — 빌드 때 BigQuery에서 센 값. 집계 전이거나 집계를 안 하는 빌드(로컬 기본)면 표시하지 않는다 */
 const views = await getViews();
 const viewCount = views.counts[post.id];
 ---
@@ -54,40 +54,13 @@ const viewCount = views.counts[post.id];
 		<div class:list={['postwrap', { 'no-toc': !showToc }]}>
 			<article class="post">
 				<div class="crumb mono">
-					<a href="/posts">~/posts</a> / <a href={`/posts/category/${category}`}>{category}</a> / {post.id}
+					<a href="/posts">~/posts</a> / {post.id}
 				</div>
 				<h1>{title}</h1>
 				<div class="meta mono">
-					<div>
-						<b>CATEGORY</b>
-						<a class="cat" href={`/posts/category/${category}`}>{category}</a> — {categoryOf(category).description}
-					</div>
-					{
-						layers && (
-							<div>
-								<b>LAYERS</b>
-								<LayerRoute layers={layers} />
-							</div>
-						)
-					}
-					<div>
-						<b>DATE</b>
-						<time datetime={pubDate.toISOString()}>{ymd(pubDate)}</time> · {minutes} min read
-						{updatedDate && <> · updated <time datetime={updatedDate.toISOString()}>{ymd(updatedDate)}</time></>}
-					</div>
-					{
-						views.updatedAt && (
-							<div>
-								<b>VIEWS</b>
-								{viewCount ? (
-									formatViews(viewCount)
-								) : (
-									<span class="vu">— 집계 전 (다음 06:00 빌드부터)</span>
-								)}
-							</div>
-						)
-					}
-					{tags.length > 0 && <div class="tags">{tags.map((tag) => `#${tag}`).join(' ')}</div>}
+					<time datetime={pubDate.toISOString()}>{ymd(pubDate)}</time> · {minutes} min read
+					{updatedDate && <> · updated <time datetime={updatedDate.toISOString()}>{ymd(updatedDate)}</time></>}
+					{viewCount ? <> · {formatViews(viewCount)}</> : null} · <a class="cat" href={`/posts/category/${category}`}>{category}</a>
 				</div>
 				{heroImage && <Image class="hero" width={1020} height={510} src={heroImage} alt="" />}
 
@@ -95,6 +68,30 @@ const viewCount = views.counts[post.id];
 					<slot />
 				</div>
 
+				{
+					(layers || tags.length > 0) && (
+						<dl class="pmeta mono">
+							{layers && (
+								<div>
+									<dt>layers</dt>
+									<dd>
+										<LayerRoute layers={layers} />
+									</dd>
+								</div>
+							)}
+							{tags.length > 0 && (
+								<div>
+									<dt>tags</dt>
+									<dd>
+										{tags.map((tag) => (
+											<a href={`/search?q=${encodeURIComponent(`#${tag}`)}`}>#{tag}</a>
+										))}
+									</dd>
+								</div>
+							)}
+						</dl>
+					)
+				}
 				{
 					related.length > 0 && (
 						<section class="pe" aria-labelledby="related">
@@ -183,40 +180,54 @@ const viewCount = views.counts[post.id];
 	.crumb a {
 		color: var(--acc);
 	}
-	.meta .cat {
-		color: var(--tx);
-	}
-	.meta .cat:hover {
-		color: var(--hi);
-	}
 	h1 {
-		margin: 14px 0 18px;
+		margin: 14px 0 12px;
 		color: var(--hi);
 		font-size: 32px;
 		line-height: 1.35;
 		letter-spacing: -0.01em;
 	}
+	/* 제목 아래 한 줄: 날짜 · 분량 · (조회수) · 카테고리 */
 	.meta {
-		padding: 14px 16px;
-		border: 1px solid var(--line);
-		border-radius: 6px;
-		background: var(--panel);
+		margin-bottom: 28px;
+		color: var(--dim);
+		font-size: 13px;
+	}
+	.meta .cat {
+		color: var(--acc);
+	}
+	.meta .cat:hover {
+		text-decoration: underline;
+	}
+	/* 글 끝: 이 글이 거친 레이어 + 태그(누르면 /search) */
+	.pmeta {
+		margin: 40px 0 0;
+		padding-top: 16px;
+		border-top: 1px solid var(--line);
 		color: var(--dim);
 		font-size: 13px;
 		line-height: 1.9;
 	}
-	.meta b {
-		display: inline-block;
-		width: 78px;
+	.pmeta > div {
+		display: flex;
+		gap: 12px;
+		align-items: baseline;
+	}
+	.pmeta dt {
+		flex: none;
+		width: 52px;
+	}
+	.pmeta dd {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 10px;
+		margin: 0;
+	}
+	.pmeta dd a {
 		color: var(--acc);
-		font-weight: 400;
 	}
-	.meta .vu {
-		color: var(--dim);
-	}
-	.tags {
-		margin-top: 4px;
-		font-size: 12px;
+	.pmeta dd a:hover {
+		text-decoration: underline;
 	}
 	.hero {
 		display: block;
