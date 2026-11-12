@@ -63,17 +63,45 @@ resource "google_service_account" "deployer" {
   depends_on = [google_project_service.ci]
 }
 
+# 배포만 할 수 있는 커스텀 역할 (2026-11-12, roles/firebasehosting.admin 대체).
+# 기성 Hosting 역할은 Admin/Viewer 둘뿐이고, Admin에는 배포에 필요 없는 sites.create·sites.delete가 들어 있다.
+# 배포(버전 생성·업로드·릴리스)는 sites.update 하나에 묶여 있어서, 좁힐 수 있는 건 "사이트 생성·삭제 차단"까지다.
+resource "google_project_iam_custom_role" "hosting_deployer" {
+  provider    = google-beta
+  project     = var.project_id
+  role_id     = "blogHostingDeployer"
+  title       = "Blog Hosting Deployer"
+  description = "firebase deploy --only hosting 에 필요한 권한만 (사이트 생성·삭제 제외)"
+  permissions = [
+    "firebasehosting.sites.get",
+    "firebasehosting.sites.list", # 읽기 전용 — firebase-tools가 사이트를 찾을 때를 대비
+    "firebasehosting.sites.update",
+    "firebase.projects.get",
+    "resourcemanager.projects.get",
+  ]
+
+  depends_on = [google_project_service.ci]
+}
+
 # Hosting 배포 + firebase-tools가 API 사용 프로젝트를 지정할 때 필요한 권한
 resource "google_project_iam_member" "deployer" {
   provider = google-beta
-  for_each = toset([
-    "roles/firebasehosting.admin",
-    "roles/serviceusage.serviceUsageConsumer",
-  ])
+  # 키는 고정 문자열이어야 한다 (커스텀 역할 id는 apply 전엔 알 수 없어서 값으로만 쓴다)
+  for_each = {
+    hosting      = google_project_iam_custom_role.hosting_deployer.id
+    serviceusage = "roles/serviceusage.serviceUsageConsumer"
+  }
 
   project = var.project_id
   role    = each.value
   member  = "serviceAccount:${google_service_account.deployer.email}"
+}
+
+# 키 이름을 바꾸면서 serviceUsageConsumer 바인딩이 지웠다 다시 만들어지지 않게 옮긴다.
+# (예전 키 "roles/firebasehosting.admin" 바인딩은 옮기지 않는다 — 이번 변경으로 지워지는 게 목적)
+moved {
+  from = google_project_iam_member.deployer["roles/serviceusage.serviceUsageConsumer"]
+  to   = google_project_iam_member.deployer["serviceusage"]
 }
 
 # 이 저장소에서 온 토큰만 위 서비스 계정을 쓸 수 있다

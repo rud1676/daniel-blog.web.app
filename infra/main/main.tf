@@ -1,6 +1,8 @@
-# 메인 레이어 — 블로그를 띄우는 리소스.
-#   지금: Firebase 프로젝트 + Hosting 사이트 (로컬에서 firebase deploy)
-#   다음: Workload Identity Federation · 배포 서비스 계정 · 커스텀 도메인
+# 메인 레이어 — 블로그를 띄우는 리소스. 기능별로 파일을 나눈다.
+#   main.tf      Firebase 프로젝트 + Hosting 사이트
+#   domain.tf    커스텀 도메인 kyungjin.dev
+#   ci.tf        GitHub Actions 배포 인증·권한
+#   analytics.tf 방문 분석 (Hosting 로그 → BigQuery)
 
 resource "google_project_service" "main" {
   provider = google-beta

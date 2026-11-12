@@ -28,5 +28,5 @@ variable "region" {
 variable "monthly_budget_krw" {
   description = "월 예산(원). 넘으면 메일 알림만 오고 청구가 막히지는 않는다."
   type        = number
-  default     = 1000
+  default     = 2000
 }

@@ -1,6 +1,6 @@
 # 방문 분석 — 페이지에 스크립트를 넣지 않고(JS 0) Hosting 요청 로그를 BigQuery로 모은다.
 #   Firebase Hosting → Cloud Logging(webrequests) → 로그 싱크 → BigQuery hosting_logs
-# 비용 기준: 월 예산 알림 1,000원 안. 무료 한도 밖은 BigQuery 스트리밍 적재(200MB당 $0.01)뿐이라
+# 비용 기준: 월 예산 알림 2,000원 안. 무료 한도 밖은 BigQuery 스트리밍 적재(200MB당 $0.01)뿐이라
 # 정적 자산(/_astro/**)·favicon 요청을 필터로 빼서 행 수를 페이지 요청만큼으로 줄인다.
 #
 # Terraform 밖 수동 1회: Firebase 콘솔 → 프로젝트 설정 → 연동 → Cloud Logging → Link → 사이트 daniel-blog
