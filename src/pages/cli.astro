@@ -35,7 +35,7 @@ const born = getFirstCommitDate();
 		</div>
 	</section>
 	<!-- 셸 기능에 대한 댓글 — 글 댓글과 같은 giscus, 토론은 /cli 하나. 버튼 없이 스크롤하면 바로 열린다 (D20) -->
-	<Comments title="댓글 목록" note="" auto />
+	<Comments title="댓글 목록" note="" />
 </BaseLayout>
 
 <script>
@@ -336,6 +336,91 @@ const born = getFirstCommitDate();
 		outline: 0;
 		background: var(--bg);
 	}
+	/* dagent — 대체 화면 위 대화(.dlog) + 아래 입력 줄(.dform) (dagent.ts) */
+	.alt :global(.dlog) {
+		padding: 10px 22px 18px;
+	}
+	.alt :global(.dlog p) {
+		min-height: 1.75em;
+		margin: 0;
+		white-space: pre-wrap;
+	}
+	.alt :global(.dlog p.cmd) {
+		margin-top: 0.9em;
+		color: var(--hi);
+	}
+	.alt :global(.dlog .hi) {
+		color: var(--hi);
+	}
+	.alt :global(.dlog .p) {
+		color: var(--ok);
+	}
+	.alt :global(.dlog .pa) {
+		color: var(--acc);
+	}
+	.alt :global(.dlog .err) {
+		color: var(--err);
+	}
+	.alt :global(.dlog .warn) {
+		color: var(--warn);
+	}
+	.alt :global(.dlog .step) {
+		color: var(--dim);
+		font-size: 13px;
+	}
+	.alt :global(.dlog .sk) {
+		color: var(--tx);
+	}
+	.alt :global(.dlog .ans) {
+		margin-top: 0.3em;
+		color: var(--body);
+		font-family: var(--sans);
+	}
+	.alt :global(.dlog a) {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.alt :global(.dlog a:hover) {
+		color: var(--hi);
+	}
+	.alt :global(.dlog .q) {
+		margin: 2px 6px 2px 0;
+		padding: 1px 8px;
+		border: 1px solid var(--line);
+		border-radius: 4px;
+		background: none;
+		color: var(--tx);
+		font: inherit;
+		cursor: pointer;
+	}
+	.alt :global(.dlog .q:hover) {
+		border-color: var(--acc);
+	}
+	.alt :global(.dform) {
+		display: flex;
+		gap: 1ch;
+		align-items: center;
+		padding: 12px 22px;
+		border-top: 1px solid var(--line);
+	}
+	.alt :global(.dpr) {
+		color: var(--acc);
+		white-space: nowrap;
+	}
+	.alt :global(.din) {
+		flex: 1;
+		min-width: 0;
+		padding: 0;
+		border: 0;
+		outline: 0;
+		background: none;
+		color: var(--hi);
+		font: inherit;
+		caret-color: var(--acc);
+	}
+	.alt :global(.din::placeholder) {
+		color: var(--dot);
+	}
 	/* vim — 줄 번호 칸 + 원문 (D21) */
 	.alt :global(.vbody) {
 		position: relative;
@@ -528,6 +613,15 @@ const born = getFirstCommitDate();
 		}
 		.alt :global(.gbody) {
 			padding: 10px 12px 24px;
+		}
+		.alt :global(.dlog) {
+			padding: 10px 12px 18px;
+		}
+		.alt :global(.dform) {
+			padding: 12px 14px;
+		}
+		.alt :global(.din) {
+			font-size: 16px; /* iOS 확대 방지 */
 		}
 		.zin {
 			padding: 12px 14px;

@@ -26,6 +26,8 @@ export type PagerOpts = {
 	onClose?: () => void;
 	/** 스크롤 진행률을 오른쪽 아래에 */
 	progress?: boolean;
+	/** 본문과 아래 줄 사이에 고정할 입력 줄 (dagent). 여기서 난 키는 입력 쪽이 처리하고 막는다 */
+	input?: Node;
 };
 
 const LINE = 40;
@@ -42,6 +44,7 @@ export function openPager(sh: Shell, opts: PagerOpts): Pager {
 	alt.replaceChildren(
 		el('div', { class: 'gtop' }, span('badge', opts.badge), ' ', el('span', { class: 'gt' }, opts.title), closeBtn),
 		scroller,
+		...(opts.input ? [opts.input] : []), // replaceChildren은 undefined를 글자로 넣는다
 		el('div', { class: 'gbar' }, el('span', {}, opts.footer), status),
 	);
 	alt.hidden = false;

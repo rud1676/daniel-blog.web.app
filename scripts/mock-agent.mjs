@@ -3,6 +3,7 @@
 //   node scripts/mock-agent.mjs [ok|down|429|refused|statsfail]   (기본 ok, 포트 8787)
 //   PUBLIC_AGENT_URL=http://localhost:8787 npm run dev  → http://localhost:4321/cli
 // down: 모든 엔드포인트 503 · 429: /v1/chat 429 · refused: refused 이벤트 · statsfail: /v1/stats 500
+// /v1/chat은 step(과정) → token(답, judge 통과 뒤) → sources → done 순서 (2026-11-08 A안)
 import { createServer } from 'node:http';
 
 const mode = process.argv[2] ?? 'ok';
@@ -35,12 +36,26 @@ createServer(async (req, res) => {
 		if (mode === '429') return json(res, 429, {}, { ...h, 'Retry-After': '30' });
 		res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', ...h });
 		const send = (event, data) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+		// A안: 과정(step)은 오는 대로, 답(token)은 judge를 통과한 뒤에만 — 그래서 답은 몇 덩어리로 한꺼번에 온다
+		send('step', { kind: 'plan', text: mode === 'refused' ? 'out' : 'what × infra' });
+		await sleep(500);
 		if (mode === 'refused') {
 			send('refused', { reason: 'out_of_scope', chips: ['어떤 문제를 가장 잘 푸나요?'] });
 		} else {
-			for (const t of '정적 사이트(Astro)를 Firebase Hosting에 올리고, 프로젝트·호스팅·도메인은 Terraform으로 관리해요. (mock 답변)'.split(/(?<= )/)) {
+			send('step', { kind: 'tool', name: 'read_post', arg: 'pod-rolling-update-email-code' });
+			await sleep(700);
+			send('step', { kind: 'tool', name: 'read_decision', arg: 'chatbot-routing' });
+			await sleep(700);
+			send('step', { kind: 'check', text: '근거 2개 · 범위 밖 주장 없음' });
+			await sleep(400);
+			const answer = [
+				'정적 사이트(Astro)를 Firebase Hosting에 올리고, 프로젝트·호스팅·도메인은 Terraform으로 관리해요. ',
+				'챗봇 agent는 비용 때문에 클라우드 대신 직접 운영하는 서버에서 돌리고, 블로그와는 HTTP 요청 하나 + SSE 응답으로만 이어져요. ',
+				'(mock 답변)',
+			];
+			for (const t of answer) {
 				send('token', { text: t });
-				await sleep(40);
+				await sleep(120);
 			}
 			send('sources', { items: [{ kind: 'project', slug: 'daniel-blog', title: '이 블로그' }, { kind: 'post', slug: 'pod-rolling-update-email-code', title: '파드 글' }] });
 		}
